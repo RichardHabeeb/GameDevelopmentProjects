@@ -42,7 +42,7 @@ function vector(setX, setY) {
 var pixelsPerMeter = 10;
 var defaultBallSpeed = 20;
 var defaultBallMass = 1;
-var defaultBallRadius = 1.5;
+var defaultBallRadius = 1;
 function ball (setPosition) {
     var that = {};
     var domElement = createSvgUtl("circle");
@@ -61,9 +61,25 @@ function ball (setPosition) {
         boardElement.appendChild(domElement);
     }
 
-    that.updateLocation = function(elapsedTimeSeconds) {
+    that.updateLocation = function(elapsedTimeSeconds, boardSize) {
         that.position.x += that.velocity.x * elapsedTimeSeconds;
         that.position.y += that.velocity.y * elapsedTimeSeconds;
+        if(that.position.x > (boardSize.x - that.radius)) {
+            that.position.x = boardSize.x - that.radius;
+            that.velocity.x = -that.velocity.x;
+        }
+        if(that.position.x < that.radius) {
+            that.position.x = that.radius;
+            that.velocity.x = -that.velocity.x;
+        }
+        if(that.position.y > (boardSize.y - that.radius)) {
+            that.position.y = boardSize.y - that.radius;
+            that.velocity.y = -that.velocity.y;
+        }
+        if(that.position.y < that.radius) {
+            that.position.y = that.radius;
+            that.velocity.y = -that.velocity.y;
+        }
     }
 
     return that;
@@ -94,12 +110,29 @@ function player (setPosition) {
         boardElement.appendChild(domElement);
     }
 
-    that.updateLocation = function(elapsedTimeSeconds) {
+    that.updateLocation = function(elapsedTimeSeconds, boardSize) {
         var acceleration = vector(that.appliedForce.x * that.mass, that.appliedForce.y * that.mass);
         that.velocity.x = limitMaxValue(that.velocity.x + acceleration.x * elapsedTimeSeconds, that.maxSpeed);
         that.velocity.y = limitMaxValue(that.velocity.y + acceleration.y * elapsedTimeSeconds, that.maxSpeed);
         that.position.x += that.velocity.x * elapsedTimeSeconds;
         that.position.y += that.velocity.y * elapsedTimeSeconds;
+        if(that.position.x > (boardSize.x - that.currentSize.x / 2)) {
+            that.position.x = boardSize.x - that.currentSize.x / 2;
+            that.velocity.x = -that.velocity.x;
+        }
+        if(that.position.x < that.currentSize.x / 2) {
+            that.position.x = that.currentSize.x / 2;
+            that.velocity.x = -that.velocity.x;
+        }
+        if(that.position.y > (boardSize.y - that.currentSize.y / 2)) {
+            that.position.y = boardSize.y - that.currentSize.y / 2;
+            that.velocity.y = -that.velocity.y;
+        }
+        if(that.position.y < that.currentSize.y / 2) {
+            that.position.y = that.currentSize.y / 2;
+            that.velocity.y = -that.velocity.y;
+        }
+
     }
 
     return that;
@@ -118,7 +151,7 @@ function artificialPlayer (controlledPlayer, quaffle) {
 
 function gameBoard (setSize) {
     var that = {};
-    var size = setSize; //TODO size undefined?
+    var size = setSize;
     var leftPlayer = player(vector(defaultPlayerSize.x / 2, (size.y - defaultPlayerSize.y / 2) / 2));
     var rightPlayer = player(vector(size.x - defaultPlayerSize.x / 2, (size.y - defaultPlayerSize.y / 2) / 2));
     var containerElement = document.getElementById('pongGame');
@@ -131,9 +164,9 @@ function gameBoard (setSize) {
     var update = function (elapsedTimeSeconds) {
         leftPlayerController.update();
         rightPlayerController.update();
-        leftPlayer.updateLocation(elapsedTimeSeconds);
-        rightPlayer.updateLocation(elapsedTimeSeconds);
-        quaffle.updateLocation(elapsedTimeSeconds);
+        leftPlayer.updateLocation(elapsedTimeSeconds, size);
+        rightPlayer.updateLocation(elapsedTimeSeconds, size);
+        quaffle.updateLocation(elapsedTimeSeconds, size);
     }
 
     var render = function () {
@@ -155,7 +188,6 @@ function gameBoard (setSize) {
         domElement.setAttribute('width', size.x * pixelsPerMeter);
         domElement.setAttribute('height', size.y * pixelsPerMeter);
         containerElement.appendChild(domElement);
-
         leftPlayer.attachTo(domElement);
         rightPlayer.attachTo(domElement);
         quaffle.attachTo(domElement);

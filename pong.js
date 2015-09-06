@@ -4,6 +4,15 @@ function createSvgUtl(tag) {
     return document.createElementNS("http://www.w3.org/2000/svg", tag);
 }
 
+function randomInvertNumber(num) {
+    return Math.random() > 0.5 ? num : -num;
+}
+
+function limitMaxValue(number, max) {
+    var test = Math.min(Math.abs(max), Math.abs(number));
+    return ((number < 0) ? -1 : 1) * Math.min(Math.abs(max), Math.abs(number));
+}
+
 
 function vector(setX, setY) {
     if (typeof setX === 'undefined') {
@@ -31,32 +40,38 @@ function vector(setX, setY) {
 }
 
 var pixelsPerMeter = 10;
-
-function ball () {
+var defaultBallSpeed = 20;
+var defaultBallMass = 1;
+var defaultBallRadius = 1.5;
+function ball (setPosition) {
     var that = {};
     var domElement = createSvgUtl("circle");
-
-    that.position = vector();
-    that.velocity = vector();
-    that.acceleration = vector();
+    that.position = vector(setPosition.x, setPosition.y);
+    that.velocity = vector(randomInvertNumber(defaultBallSpeed), defaultBallSpeed);
+    that.radius = defaultBallRadius;
+    that.mass = defaultBallMass;
 
     that.draw = function () {
-
+        domElement.setAttribute('r', that.radius * pixelsPerMeter);
+        domElement.setAttribute('cx', that.position.x * pixelsPerMeter);
+        domElement.setAttribute('cy', that.position.y * pixelsPerMeter);
     }
 
     that.attachTo = function (boardElement) {
         boardElement.appendChild(domElement);
     }
 
-    that.update = function (elapsedTime) {
-
+    that.updateLocation = function(elapsedTimeSeconds) {
+        that.position.x += that.velocity.x * elapsedTimeSeconds;
+        that.position.y += that.velocity.y * elapsedTimeSeconds;
     }
 
     return that;
 }
 
-var defaultPlayerSize = vector(20, 100);
+var defaultPlayerSize = vector(2, 10);
 var defaultPlayerMass = 1; //kg
+var defaultPlayerMaxSpeed = 40;
 function player (setPosition) {
     var that = {};
     var domElement = createSvgUtl("rect");
@@ -66,12 +81,13 @@ function player (setPosition) {
     that.velocity = vector();
     that.appliedForce = vector();
     that.mass = defaultPlayerMass;
+    that.maxSpeed = defaultPlayerMaxSpeed;
 
     that.draw = function() {
-        domElement.setAttribute('width', that.currentSize.x);
-        domElement.setAttribute('height', that.currentSize.y);
-        domElement.setAttribute('x', that.position.x);
-        domElement.setAttribute('y', that.position.y);
+        domElement.setAttribute('width', that.currentSize.x * pixelsPerMeter);
+        domElement.setAttribute('height', that.currentSize.y * pixelsPerMeter);
+        domElement.setAttribute('x', (that.position.x - (that.currentSize.x / 2)) * pixelsPerMeter);
+        domElement.setAttribute('y', (that.position.y - (that.currentSize.y / 2)) * pixelsPerMeter);
     }
 
     that.attachTo = function (boardElement) {
@@ -80,10 +96,21 @@ function player (setPosition) {
 
     that.updateLocation = function(elapsedTimeSeconds) {
         var acceleration = vector(that.appliedForce.x * that.mass, that.appliedForce.y * that.mass);
-        that.velocity.x += acceleration.x * elapsedTimeSeconds;
-        that.velocity.y += acceleration.y * elapsedTimeSeconds;
-        that.position.x += pixelsPerMeter * that.velocity.x * elapsedTimeSeconds;
-        that.position.y += pixelsPerMeter * that.velocity.y * elapsedTimeSeconds;
+        that.velocity.x = limitMaxValue(that.velocity.x + acceleration.x * elapsedTimeSeconds, that.maxSpeed);
+        that.velocity.y = limitMaxValue(that.velocity.y + acceleration.y * elapsedTimeSeconds, that.maxSpeed);
+        that.position.x += that.velocity.x * elapsedTimeSeconds;
+        that.position.y += that.velocity.y * elapsedTimeSeconds;
+    }
+
+    return that;
+}
+
+function artificialPlayer (controlledPlayer, quaffle) {
+    var that = {};
+
+    that.update = function () {
+        if(quaffle.position.y < controlledPlayer.position.y) controlledPlayer.appliedForce.y = -100;
+        if(quaffle.position.y > controlledPlayer.position.y) controlledPlayer.appliedForce.y = 100;
     }
 
     return that;
@@ -92,16 +119,21 @@ function player (setPosition) {
 function gameBoard (setSize) {
     var that = {};
     var size = setSize; //TODO size undefined?
-    var leftPlayer = player(vector(0, (size.y - defaultPlayerSize.y) / 2));
-    var rightPlayer = player(vector(size.x - defaultPlayerSize.x, (size.y - defaultPlayerSize.y) / 2));
+    var leftPlayer = player(vector(defaultPlayerSize.x / 2, (size.y - defaultPlayerSize.y / 2) / 2));
+    var rightPlayer = player(vector(size.x - defaultPlayerSize.x / 2, (size.y - defaultPlayerSize.y / 2) / 2));
     var containerElement = document.getElementById('pongGame');
     var domElement = createSvgUtl('svg');
     var previousTimeStamp = null;
-    var quaffle = ball();
+    var quaffle = ball(vector(size.x / 2, 0));
+    var leftPlayerController = artificialPlayer(leftPlayer, quaffle);
+    var rightPlayerController = artificialPlayer(rightPlayer, quaffle);
 
     var update = function (elapsedTimeSeconds) {
+        leftPlayerController.update();
+        rightPlayerController.update();
         leftPlayer.updateLocation(elapsedTimeSeconds);
         rightPlayer.updateLocation(elapsedTimeSeconds);
+        quaffle.updateLocation(elapsedTimeSeconds);
     }
 
     var render = function () {
@@ -120,36 +152,22 @@ function gameBoard (setSize) {
     }
 
     that.run = function () {
-        domElement.setAttribute('width', size.x);
-        domElement.setAttribute('height', size.y);
+        domElement.setAttribute('width', size.x * pixelsPerMeter);
+        domElement.setAttribute('height', size.y * pixelsPerMeter);
         containerElement.appendChild(domElement);
-
-        leftPlayer.appliedForce.y = -50;
 
         leftPlayer.attachTo(domElement);
         rightPlayer.attachTo(domElement);
-        quaffle.draw();
-
+        quaffle.attachTo(domElement);
         window.requestAnimationFrame(loop);
     }
 
     return  that;
 }
 
-function artificialPlayer (controlledPlayer, quaffle) {
-    var that = {};
-
-    that.update = function () {
-        if(quaffle.position.y < controlledPlayer.y) controlledPlayer.appliedForce.y = -50;
-        if(quaffle.position.y > controlledPlayer.y) controlledPlayer.appliedForce.y = 50;
-    }
-
-    return that;
-}
-
 
 window.onload = function () {
-    var boardSize = vector(800, 500);
+    var boardSize = vector(120, 50);
     var game = gameBoard(boardSize);
 
     game.run();

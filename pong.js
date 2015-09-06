@@ -9,8 +9,24 @@ function randomInvertNumber(num) {
 }
 
 function limitMaxValue(number, max) {
-    var test = Math.min(Math.abs(max), Math.abs(number));
     return ((number < 0) ? -1 : 1) * Math.min(Math.abs(max), Math.abs(number));
+}
+
+function sqr(x) { return x * x }
+function dist2(v, w) { return sqr(v.x - w.x) + sqr(v.y - w.y) }
+function distToSegmentSquared(p, v, w) {
+  var l2 = dist2(v, w);
+  if (l2 == 0) return dist2(p, v);
+  var t = ((p.x - v.x) * (w.x - v.x) + (p.y - v.y) * (w.y - v.y)) / l2;
+  if (t < 0) return dist2(p, v);
+  if (t > 1) return dist2(p, w);
+  return dist2(p, { x: v.x + t * (w.x - v.x),
+                    y: v.y + t * (w.y - v.y) });
+}
+function distToSegment(p, v, w) { return Math.sqrt(distToSegmentSquared(p, v, w)); }
+
+function lineIntersectsCircle(circleCenter, radius, pointA, pointB) {
+    return radius >= distToSegment(circleCenter, pointA, pointB);
 }
 
 
@@ -46,6 +62,7 @@ function ball (setPosition) {
     var domElement = createSvgUtl("circle");
     that.position = vector(setPosition.x, setPosition.y);
     that.velocity = vector(randomInvertNumber(defaultBallSpeed), defaultBallSpeed);
+    that.appliedForce = vector(that.velocity.x * 0.1, that.velocity.y * 0.1);
     that.radius = defaultBallRadius;
     that.mass = defaultBallMass;
 
@@ -63,7 +80,10 @@ function ball (setPosition) {
         boardElement.removeChild(domElement);
     }
 
-    that.updateAndCheckLocation = function(elapsedTimeSeconds, boardSize) {
+    that.updateAndCheckLocation = function(elapsedTimeSeconds, boardSize, leftPlayer, rightPlayer) {
+        var acceleration = vector(that.appliedForce.x * that.mass, that.appliedForce.y * that.mass);
+        that.velocity.x += acceleration.x * elapsedTimeSeconds;
+        that.velocity.y += acceleration.y * elapsedTimeSeconds;
         that.position.x += that.velocity.x * elapsedTimeSeconds;
         that.position.y += that.velocity.y * elapsedTimeSeconds;
         if(that.position.x > (boardSize.x - that.radius)) {
@@ -72,13 +92,31 @@ function ball (setPosition) {
         if(that.position.x < that.radius) {
             return gameState.rightScored;
         }
+        if(lineIntersectsCircle(that.position, that.radius,
+            vector(leftPlayer.position.x + leftPlayer.currentSize.x / 2, leftPlayer.position.y + leftPlayer.currentSize.y / 2),
+            vector(leftPlayer.position.x + leftPlayer.currentSize.x / 2, leftPlayer.position.y - leftPlayer.currentSize.y / 2)))
+        {
+            that.position.x = leftPlayer.position.x + leftPlayer.currentSize.x / 2 + that.radius;
+            that.velocity.x = -that.velocity.x;
+            that.appliedForce.x = -that.appliedForce.x;
+        }
+        if(lineIntersectsCircle(that.position, that.radius,
+            vector(rightPlayer.position.x - rightPlayer.currentSize.x / 2, rightPlayer.position.y + rightPlayer.currentSize.y / 2),
+            vector(rightPlayer.position.x - rightPlayer.currentSize.x / 2, rightPlayer.position.y - rightPlayer.currentSize.y / 2)))
+        {
+            that.position.x = rightPlayer.position.x - rightPlayer.currentSize.x / 2 - that.radius;
+            that.velocity.x = -that.velocity.x;
+            that.appliedForce.x = -that.appliedForce.x;
+        }
         if(that.position.y > (boardSize.y - that.radius)) {
             that.position.y = boardSize.y - that.radius;
             that.velocity.y = -that.velocity.y;
+            that.appliedForce.y = -that.appliedForce.y;
         }
         if(that.position.y < that.radius) {
             that.position.y = that.radius;
             that.velocity.y = -that.velocity.y;
+            that.appliedForce.y = -that.appliedForce.y;
         }
         return gameState.running;
     }
@@ -143,8 +181,8 @@ function artificialPlayer (controlledPlayer) {
     var that = {};
 
     that.update = function (quaffle) {
-        if(quaffle.position.y < controlledPlayer.position.y) controlledPlayer.appliedForce.y = -100;
-        if(quaffle.position.y > controlledPlayer.position.y) controlledPlayer.appliedForce.y = 100;
+        if(quaffle.position.y < controlledPlayer.position.y) controlledPlayer.appliedForce.y = -200;
+        if(quaffle.position.y > controlledPlayer.position.y) controlledPlayer.appliedForce.y = 200;
     }
 
     return that;
@@ -229,7 +267,7 @@ function gameBoard (setSize) {
         rightPlayerController.update(quaffle);
         leftPlayer.updateLocation(elapsedTimeSeconds, size);
         rightPlayer.updateLocation(elapsedTimeSeconds, size);
-        var state = quaffle.updateAndCheckLocation(elapsedTimeSeconds, size);
+        var state = quaffle.updateAndCheckLocation(elapsedTimeSeconds, size, leftPlayer, rightPlayer);
         if(state == gameState.leftScored || state == gameState.rightScored) {
             quaffle.detachFrom(domElement);
             quaffle = ball(vector(size.x / 2, 0));

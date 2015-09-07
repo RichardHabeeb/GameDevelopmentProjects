@@ -101,7 +101,7 @@ function ball (setPosition) {
     }
 
     that.detachFrom = function (boardElement) {
-        boardElement.removeChild(domElement);
+        if(domElement.parentNode == boardElement) boardElement.removeChild(domElement);
     }
 
     that.updateAndCheckLocation = function(elapsedTimeSeconds, boardSize, leftPlayer, rightPlayer) {
@@ -167,6 +167,10 @@ function player (setPosition) {
 
     that.attachTo = function (boardElement) {
         boardElement.appendChild(domElement);
+    }
+
+    that.detachFrom = function (boardElement) {
+        boardElement.removeChild(domElement);
     }
 
     that.updateLocation = function(elapsedTimeSeconds, boardSize) {
@@ -235,10 +239,10 @@ function keyboardController () {
 
 function scoreText (setPosition) {
     var that = {};
-    var score = 0;
     var domElement = createSvgUtl('text');
 
     that.position = vector(setPosition.x, setPosition.y);
+    that.score = 0;
 
     that.draw = function() {
         domElement.setAttribute('x', that.position.x * pixelsPerMeter);
@@ -247,15 +251,15 @@ function scoreText (setPosition) {
         domElement.setAttribute('font-family', 'Roboto');
         domElement.setAttribute('font-weight', 900);
         domElement.setAttribute('fill', '#aaaaaa');
-        domElement.innerHTML = score;
+        domElement.innerHTML = that.score;
     }
 
     that.attachTo = function (boardElement) {
         boardElement.appendChild(domElement);
     }
 
-    that.increment = function() {
-        score++;
+    that.detachFrom = function (boardElement) {
+        boardElement.removeChild(domElement);
     }
 
     return that;
@@ -286,15 +290,21 @@ function scoreBoard (setPosition) {
         boardElement.appendChild(domElement);
     }
 
+    that.detachFrom = function (boardElement) {
+        leftScore.detachFrom(domElement);
+        rightScore.detachFrom(domElement);
+        boardElement.removeChild(domElement);
+    }
+
     that.addScore = function(state) {
-        if(state == gameState.leftScored) leftScore.increment();
-        if(state == gameState.rightScored) rightScore.increment();
+        if(state == gameState.leftScored) return ++leftScore.score;
+        if(state == gameState.rightScored) return ++rightScore.score;
     }
 
     return that;
 }
 
-function gameBoard (setSize, leftPlayerController, rightPlayerController) {
+function gameBoard (setSize, leftPlayerController, rightPlayerController, restartGameCallBack) {
     var that = {};
     var size = setSize;
     var leftPlayer = player(vector(defaultPlayerSize.x / 2, (size.y - defaultPlayerSize.y / 2) / 2));
@@ -304,6 +314,7 @@ function gameBoard (setSize, leftPlayerController, rightPlayerController) {
     var previousTimeStamp = null;
     var quaffle = ball(vector(size.x / 2, 0));
     var score = scoreBoard(vector(size.x / 2, defaultScoreBoardSize.y / 2));
+    var animationFrameId = 0;
 
     var update = function (elapsedTimeSeconds) {
         leftPlayerController.update(quaffle);
@@ -315,7 +326,7 @@ function gameBoard (setSize, leftPlayerController, rightPlayerController) {
             quaffle.detachFrom(domElement);
             quaffle = ball(vector(size.x / 2, 0));
             quaffle.attachTo(domElement);
-            score.addScore(state);
+            if(score.addScore(state) == 10) restartGameCallBack();
         }
     }
 
@@ -331,7 +342,7 @@ function gameBoard (setSize, leftPlayerController, rightPlayerController) {
         var elapsedTimeSeconds = (timeStamp - previousTimeStamp) / 1000.0;
         update(elapsedTimeSeconds);
         render();
-        window.requestAnimationFrame(loop);
+        animationFrameId = window.requestAnimationFrame(loop);
         previousTimeStamp = timeStamp;
     }
 
@@ -345,34 +356,56 @@ function gameBoard (setSize, leftPlayerController, rightPlayerController) {
         rightPlayer.attachTo(domElement);
         quaffle.attachTo(domElement);
         score.attachTo(domElement);
-        window.requestAnimationFrame(loop);
+        animationFrameId = window.requestAnimationFrame(loop);
+    }
+
+    that.dispose = function() {
+        window.cancelAnimationFrame(animationFrameId);
+        leftPlayer.detachFrom(domElement);
+        rightPlayer.detachFrom(domElement);
+        quaffle.detachFrom(domElement);
+        score.detachFrom(domElement);
+        containerElement.removeChild(domElement);
     }
 
     return  that;
 }
 
-
 window.onload = function () {
     var boardSize = vector(120, 50);
-    var leftController = keyboardController();
-    var rightController = aiController();
-    var game = gameBoard(boardSize, leftController, rightController);
+    var humanLeftPlayer = false;
+    var humanRightPlayer = false;
+    var leftController = humanLeftPlayer ? keyboardController() : aiController();
+    var rightController = humanRightPlayer ? keyboardController() : aiController();
 
-    game.run();
+    var restartGame = function() {
+        game.dispose();
+        leftController = humanLeftPlayer ? keyboardController() : aiController();
+        rightController = humanRightPlayer ? keyboardController() : aiController();
+        game = gameBoard(boardSize, leftController, rightController, restartGame);
+        game.run();
+    }
+
+    var game = gameBoard(boardSize, leftController, rightController, restartGame);
+    document.getElementById('settings').setAttribute('style', 'width: ' + boardSize.x * pixelsPerMeter + "px");
 
     window.onkeydown = function (e) {
         var key = e.which || e.keyCode;
         if(key == 87 && !(leftController.upKey === 'undefined')) { //w
             leftController.upKey = true;
+            e.preventDefault();
         }
         if(key == 83 && !(leftController.downKey === 'undefined')) { //s
             leftController.downKey = true;
+            e.preventDefault();
         }
         if(key == 38 && !(rightController.upKey === 'undefined')) { //w
             rightController.upKey = true;
+            e.preventDefault();
         }
         if(key == 40 && !(rightController.downKey === 'undefined')) { //s
             rightController.downKey = true;
+            e.preventDefault();
         }
     }
 
@@ -380,15 +413,37 @@ window.onload = function () {
         var key = e.which || e.keyCode;
         if(key == 87 && !(leftController.upKey === 'undefined')) { //w
             leftController.upKey = false;
+            e.preventDefault();
         }
         if(key == 83 && !(leftController.downKey === 'undefined')) { //s
             leftController.downKey = false;
+            e.preventDefault();
         }
         if(key == 38 && !(rightController.upKey === 'undefined')) { //w
             rightController.upKey = false;
+            e.preventDefault();
         }
         if(key == 40 && !(rightController.downKey === 'undefined')) { //s
             rightController.downKey = false;
+            e.preventDefault();
         }
     }
+
+    var button = document.getElementById('restartButton');
+    button.style.cursor = 'pointer';
+    button.onclick = restartGame;
+
+    var leftToggle = document.getElementById('cmn-toggle-1');
+    leftToggle.style.cursor = 'pointer';
+    leftToggle.onclick = function() {
+        humanLeftPlayer = !humanLeftPlayer;
+    }
+
+    var rightToggle = document.getElementById('cmn-toggle-2');
+    rightToggle.style.cursor = 'pointer';
+    rightToggle.onclick = function() {
+        humanRightPlayer = !humanRightPlayer;
+    }
+
+    game.run();
 }

@@ -51,6 +51,7 @@ function line(setVector1, setVector2) {
     that.vector1 = setVector1;
     that.vector2 = setVector2;
 
+    /* Algorithm adapted from http://stackoverflow.com/questions/849211/shortest-distance-between-a-point-and-a-line-segment */
     var distToSegmentSquared = function (p, v, w) {
       var l2 = v.distToPointSquared(w);
       if (l2 == 0) return p.distToPointSquared(v);

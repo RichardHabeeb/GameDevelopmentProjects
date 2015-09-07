@@ -12,23 +12,9 @@ function limitMaxValue(number, max) {
     return ((number < 0) ? -1 : 1) * Math.min(Math.abs(max), Math.abs(number));
 }
 
-function sqr(x) { return x * x }
-function dist2(v, w) { return sqr(v.x - w.x) + sqr(v.y - w.y) }
-function distToSegmentSquared(p, v, w) {
-  var l2 = dist2(v, w);
-  if (l2 == 0) return dist2(p, v);
-  var t = ((p.x - v.x) * (w.x - v.x) + (p.y - v.y) * (w.y - v.y)) / l2;
-  if (t < 0) return dist2(p, v);
-  if (t > 1) return dist2(p, w);
-  return dist2(p, { x: v.x + t * (w.x - v.x),
-                    y: v.y + t * (w.y - v.y) });
+function sqr(x) {
+    return x * x;
 }
-function distToSegment(p, v, w) { return Math.sqrt(distToSegmentSquared(p, v, w)); }
-
-function lineIntersectsCircle(circleCenter, radius, pointA, pointB) {
-    return radius >= distToSegment(circleCenter, pointA, pointB);
-}
-
 
 function vector(setX, setY) {
     if (typeof setX === 'undefined') {
@@ -43,6 +29,44 @@ function vector(setX, setY) {
         x: setX,
         y: setY
     };
+
+    that.distToPointSquared = function(p) {
+        return sqr(that.x - p.x) + sqr(that.y - p.y);
+    }
+
+    return that;
+}
+
+function line(setVector1, setVector2) {
+    if (typeof setVector1 === 'undefined') {
+        setVector1 = vector();
+    }
+
+    if (typeof setVector2 === 'undefined') {
+        setVector2 = vector();
+    }
+
+    var that = {};
+
+    that.vector1 = setVector1;
+    that.vector2 = setVector2;
+
+    var distToSegmentSquared = function (p, v, w) {
+      var l2 = v.distToPointSquared(w);
+      if (l2 == 0) return p.distToPointSquared(v);
+      var t = ((p.x - v.x) * (w.x - v.x) + (p.y - v.y) * (w.y - v.y)) / l2;
+      if (t < 0) return p.distToPointSquared(v);
+      if (t > 1) return p.distToPointSquared(w);
+      return p.distToPointSquared(vector(v.x + t * (w.x - v.x), v.y + t * (w.y - v.y)));
+    }
+
+    that.distToSegment = function(p) {
+        return Math.sqrt(distToSegmentSquared(p, that.vector1, that.vector2));
+    }
+
+    that.intersectsCircle = function(circleCenter, radius) {
+        return radius >= that.distToSegment(circleCenter);
+    }
 
     return that;
 }
@@ -92,18 +116,14 @@ function ball (setPosition) {
         if(that.position.x < that.radius) {
             return gameState.rightScored;
         }
-        if(lineIntersectsCircle(that.position, that.radius,
-            vector(leftPlayer.position.x + leftPlayer.currentSize.x / 2, leftPlayer.position.y + leftPlayer.currentSize.y / 2),
-            vector(leftPlayer.position.x + leftPlayer.currentSize.x / 2, leftPlayer.position.y - leftPlayer.currentSize.y / 2)))
-        {
+        if(line(vector(leftPlayer.position.x + leftPlayer.currentSize.x / 2, leftPlayer.position.y + leftPlayer.currentSize.y / 2),
+                vector(leftPlayer.position.x + leftPlayer.currentSize.x / 2, leftPlayer.position.y - leftPlayer.currentSize.y / 2)).intersectsCircle(that.position, that.radius)) {
             that.position.x = leftPlayer.position.x + leftPlayer.currentSize.x / 2 + that.radius;
             that.velocity.x = -that.velocity.x;
             that.appliedForce.x = -that.appliedForce.x;
         }
-        if(lineIntersectsCircle(that.position, that.radius,
-            vector(rightPlayer.position.x - rightPlayer.currentSize.x / 2, rightPlayer.position.y + rightPlayer.currentSize.y / 2),
-            vector(rightPlayer.position.x - rightPlayer.currentSize.x / 2, rightPlayer.position.y - rightPlayer.currentSize.y / 2)))
-        {
+        if(line(vector(rightPlayer.position.x - rightPlayer.currentSize.x / 2, rightPlayer.position.y + rightPlayer.currentSize.y / 2),
+                vector(rightPlayer.position.x - rightPlayer.currentSize.x / 2, rightPlayer.position.y - rightPlayer.currentSize.y / 2)).intersectsCircle(that.position, that.radius)) {
             that.position.x = rightPlayer.position.x - rightPlayer.currentSize.x / 2 - that.radius;
             that.velocity.x = -that.velocity.x;
             that.appliedForce.x = -that.appliedForce.x;
@@ -126,7 +146,7 @@ function ball (setPosition) {
 
 var defaultPlayerSize = vector(2, 10);
 var defaultPlayerMass = 1; //kg
-var defaultPlayerMaxSpeed = 40;
+var defaultPlayerMaxSpeed = 50;
 function player (setPosition) {
     var that = {};
     var domElement = createSvgUtl("rect");
@@ -150,6 +170,7 @@ function player (setPosition) {
     }
 
     that.updateLocation = function(elapsedTimeSeconds, boardSize) {
+        //that.maxSpeed += 1.1 * elapsedTimeSeconds;
         var acceleration = vector(that.appliedForce.x * that.mass, that.appliedForce.y * that.mass);
         that.velocity.x = limitMaxValue(that.velocity.x + acceleration.x * elapsedTimeSeconds, that.maxSpeed);
         that.velocity.y = limitMaxValue(that.velocity.y + acceleration.y * elapsedTimeSeconds, that.maxSpeed);
@@ -177,12 +198,36 @@ function player (setPosition) {
     return that;
 }
 
-function artificialPlayer (controlledPlayer) {
+function aiController () {
     var that = {};
+    var controlledPlayer = null;
 
+    that.setPlayer = function(setControlledPlayer) {
+        controlledPlayer = setControlledPlayer;
+    }
     that.update = function (quaffle) {
+        if(controlledPlayer == null || typeof controlledPlayer === 'undefined') return;
         if(quaffle.position.y < controlledPlayer.position.y) controlledPlayer.appliedForce.y = -200;
         if(quaffle.position.y > controlledPlayer.position.y) controlledPlayer.appliedForce.y = 200;
+    }
+
+    return that;
+}
+
+function keyboardController () {
+    var that = {};
+    var controlledPlayer = null;
+
+    that.upKey = false;
+    that.downKey = false;
+
+    that.setPlayer = function(setControlledPlayer) {
+        controlledPlayer = setControlledPlayer;
+    }
+    that.update = function() {
+        if(controlledPlayer == null || typeof controlledPlayer === 'undefined') return;
+        if(that.upKey && !that.downKey) controlledPlayer.appliedForce.y = -200;
+        if(!that.upKey && that.downKey) controlledPlayer.appliedForce.y = 200;
     }
 
     return that;
@@ -249,7 +294,7 @@ function scoreBoard (setPosition) {
     return that;
 }
 
-function gameBoard (setSize) {
+function gameBoard (setSize, leftPlayerController, rightPlayerController) {
     var that = {};
     var size = setSize;
     var leftPlayer = player(vector(defaultPlayerSize.x / 2, (size.y - defaultPlayerSize.y / 2) / 2));
@@ -258,8 +303,6 @@ function gameBoard (setSize) {
     var domElement = createSvgUtl('svg');
     var previousTimeStamp = null;
     var quaffle = ball(vector(size.x / 2, 0));
-    var leftPlayerController = artificialPlayer(leftPlayer);
-    var rightPlayerController = artificialPlayer(rightPlayer);
     var score = scoreBoard(vector(size.x / 2, defaultScoreBoardSize.y / 2));
 
     var update = function (elapsedTimeSeconds) {
@@ -293,6 +336,8 @@ function gameBoard (setSize) {
     }
 
     that.run = function () {
+        leftPlayerController.setPlayer(leftPlayer);
+        rightPlayerController.setPlayer(rightPlayer);
         domElement.setAttribute('width', size.x * pixelsPerMeter);
         domElement.setAttribute('height', size.y * pixelsPerMeter);
         containerElement.appendChild(domElement);
@@ -309,7 +354,41 @@ function gameBoard (setSize) {
 
 window.onload = function () {
     var boardSize = vector(120, 50);
-    var game = gameBoard(boardSize);
+    var leftController = keyboardController();
+    var rightController = aiController();
+    var game = gameBoard(boardSize, leftController, rightController);
 
     game.run();
+
+    window.onkeydown = function (e) {
+        var key = e.which || e.keyCode;
+        if(key == 87 && !(leftController.upKey === 'undefined')) { //w
+            leftController.upKey = true;
+        }
+        if(key == 83 && !(leftController.downKey === 'undefined')) { //s
+            leftController.downKey = true;
+        }
+        if(key == 38 && !(rightController.upKey === 'undefined')) { //w
+            rightController.upKey = true;
+        }
+        if(key == 40 && !(rightController.downKey === 'undefined')) { //s
+            rightController.downKey = true;
+        }
+    }
+
+    window.onkeyup = function (e) {
+        var key = e.which || e.keyCode;
+        if(key == 87 && !(leftController.upKey === 'undefined')) { //w
+            leftController.upKey = false;
+        }
+        if(key == 83 && !(leftController.downKey === 'undefined')) { //s
+            leftController.downKey = false;
+        }
+        if(key == 38 && !(rightController.upKey === 'undefined')) { //w
+            rightController.upKey = false;
+        }
+        if(key == 40 && !(rightController.downKey === 'undefined')) { //s
+            rightController.downKey = false;
+        }
+    }
 }

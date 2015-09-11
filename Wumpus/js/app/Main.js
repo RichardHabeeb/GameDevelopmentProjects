@@ -4,6 +4,7 @@ define(function (require) {
     var Sprite = require('./Sprite');
     var Layer = require('./Layer');
     var TileMap = require('./TileMap');
+    var TileMapBuilder = require('./TileMapBuilder');
     var previousTimeStamp = null;
 
     var layers = [];
@@ -14,26 +15,30 @@ define(function (require) {
     /*
     initialize and attach stuff here
     */
+    var layout = new Uint8Array(Settings.tilesPerRow * Settings.tilesPerColumn);
+    layout.fill(1);
+    layers[0].tileMap = TileMap();
+    layers[0].tileMap.addTile("img/Space Dirt 1.png");
+    layers[0].tileMap.addLayout(layout);
 
-    var jelly = Sprite("img/Jelly.png", Vector(2 * Settings.tileSize.x, 2 * Settings.tileSize.y));
-    layers[1].attachSprite(jelly);
+    layers[1].attachSprite(Sprite("img/Jelly.png", Vector(3 * Settings.tileSize.x, 3 * Settings.tileSize.y)));
 
-    var jelly2 = Sprite("img/Jelly.png", Vector(6 * Settings.tileSize.x, 2 * Settings.tileSize.y));
-    layers[2].attachSprite(jelly2);
-
-    var tileMap = TileMap();
-    tileMap.addTile("img/Brick 1.png");
-    tileMap.addTile("img/Dirt 1.png");
-    tileMap.addTile("img/Dirt into Brick.png");
-
-    tileMap.addLayout([
-        1, 1, 1, 1, 1, 1, 1, 1,
-        3, 3, 3, 3, 3, 3, 3, 3,
-        2, 2, 2, 2, 2, 2, 2, 2,
-        2, 2, 2, 2, 2, 2, 2, 2,
+    // var explored = new Uint8Array(Settings.tilesPerRow * Settings.tilesPerColumn);
+    // explored.fill(0);
+    // explored[0] = 1;
+    explored = new Uint8Array([
+        1, 1, 1, 1, 1, 0, 0, 0,
+        1, 0, 0, 1, 0, 0, 1, 1,
+        0, 0, 0, 1, 0, 0, 1, 0,
+        0, 0, 0, 1, 1, 1, 1, 0,
+        0, 0, 1, 1, 1, 1, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0,
     ]);
+    layers[2].tileMap = TileMapBuilder(explored);
 
-    layers[0].tileMap = tileMap;
+
 
     /* Animation loop */
     var loop = function (timeStamp) {
@@ -43,7 +48,6 @@ define(function (require) {
         /*
         update position code here, every frame
         */
-        jelly2.position.x -= 10 * elapsedTimeSeconds;
 
         for(var i = 0; i < layers.length; i++) {
             layers[i].draw(elapsedTimeSeconds);

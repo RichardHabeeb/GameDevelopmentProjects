@@ -29,9 +29,11 @@ define(['app/Vector', 'app/Sprite', 'app/Settings'], function(Vector, Sprite, Se
             for(var y = 0; y < Settings.tilesPerColumn; y++) {
                 for(var x = 0; x < Settings.tilesPerRow; x++) {
                     var tile = tiles[tileLayout[x + y * Settings.tilesPerRow]];
-                    tile.position.x = x * Settings.tileSize.x;
-                    tile.position.y = y * Settings.tileSize.y;
-                    tile.draw(context);
+                    if(typeof tile !== 'undefined') {
+                        tile.position.x = x * Settings.tileSize.x;
+                        tile.position.y = y * Settings.tileSize.y;
+                        tile.draw(context);
+                    }
                 }
             }
         };

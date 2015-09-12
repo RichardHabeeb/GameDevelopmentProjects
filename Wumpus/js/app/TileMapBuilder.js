@@ -79,7 +79,7 @@ define(['app/Vector', 'app/Sprite', 'app/Settings', 'app/TileMap'], function(Vec
 
 
         tileMap.addLayout(layout);
-
+        tileMap.redrawEachFrame = false;
 
         return tileMap;
     };

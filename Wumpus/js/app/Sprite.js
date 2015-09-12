@@ -1,5 +1,5 @@
 define(['app/Vector'], function(Vector) {
-    return function(src, position) {
+    return function(src, position, onLoad) {
         var that = {};
         var img = new Image();
 
@@ -20,7 +20,10 @@ define(['app/Vector'], function(Vector) {
         img.onload = function() {
             that.size.x = img.width;
             that.size.y = img.height;
+            if(typeof onLoad !== "undefined") onLoad();
         };
+
+
         img.src = src;
 
         return that;

@@ -1,0 +1,20 @@
+<!doctype html>
+<html>
+<head>
+  <title>Canvas Retro Effect Test</title>
+  <style>
+    canvas, img {
+      image-rendering: optimizeSpeed;
+      image-rendering: -moz-crisp-edges;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: optimize-contrast;
+      image-rendering: pixelated;
+      -ms-interpolation-mode: nearest-neighbor;
+    }
+  </style>
+  <script src='canvasTest.js'></script>
+</head>
+<body>
+  <img src='Jelly.png' style='image-rendering: pixelated; width: 128px; height: 128px;' />
+</body>
+</html>

@@ -20,6 +20,7 @@ define(function (require) {
     layers[0].tileMap = TileMap();
     layers[0].tileMap.addTile("img/Space Dirt 1.png");
     layers[0].tileMap.addLayout(layout);
+    layers[0].tileMap.redrawEachFrame = false;
 
     layers[1].attachSprite(Sprite("img/Jelly.png", Vector(3 * Settings.tileSize.x, 3 * Settings.tileSize.y)));
 

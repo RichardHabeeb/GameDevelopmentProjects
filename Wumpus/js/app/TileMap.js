@@ -14,7 +14,7 @@ define(['app/Vector', 'app/Sprite', 'app/Settings'], function(Vector, Sprite, Se
         function allTilesLoaded () {
             var ret = true;
             for(var i = 1; i < tiles.length; i++) {
-                ret = ret && typeof tiles[i].size.x > 0;
+                ret = ret && tiles[i].size.x > 0;
             }
             return ret;
         }
@@ -56,12 +56,8 @@ define(['app/Vector', 'app/Sprite', 'app/Settings'], function(Vector, Sprite, Se
 
             context.clearRect(0, 0, Settings.canvasSize.x, Settings.canvasSize.y);
 
-            //if(allTilesLoaded())
-            //{
-            firstFrameDrawn = allTilesLoaded();
-                render(context);
-
-            //}
+            if(!firstFrameDrawn) firstFrameDrawn = allTilesLoaded();
+            render(context);
         };
 
         return that;

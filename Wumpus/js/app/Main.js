@@ -4,7 +4,7 @@ define(function (require) {
     var Sprite = require('./Sprite');
     var Layer = require('./Layer');
     var TileMap = require('./TileMap');
-    var TileMapBuilder = require('./TileMapBuilder');
+    var DarknessTileMapBuilder = require('./DarknessTileMapBuilder');
     var previousTimeStamp = null;
 
     var layers = [];
@@ -22,22 +22,19 @@ define(function (require) {
     layers[0].tileMap.addLayout(layout);
     layers[0].tileMap.redrawEachFrame = false;
 
-    layers[1].attachSprite(Sprite("img/Jelly.png", Vector(3 * Settings.tileSize.x, 3 * Settings.tileSize.y)));
-
-    // var explored = new Uint8Array(Settings.tilesPerRow * Settings.tilesPerColumn);
-    // explored.fill(0);
-    // explored[0] = 1;
+    layers[1].attachSprite(Sprite("img/SpaceDudeWalking.png", Vector(0 * Settings.tileSize.x, 0 * Settings.tileSize.y), Vector(0,0), 32, 3));
+    
     explored = new Uint8Array([
         1, 1, 1, 1, 1, 0, 0, 0,
         1, 0, 0, 1, 0, 0, 1, 1,
         0, 0, 0, 1, 0, 0, 1, 0,
         0, 0, 0, 1, 1, 1, 1, 0,
         0, 0, 1, 1, 1, 1, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 1, 1, 1, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0,
     ]);
-    layers[2].tileMap = TileMapBuilder(explored);
+    layers[2].tileMap = DarknessTileMapBuilder(explored);
 
 
 

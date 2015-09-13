@@ -49,6 +49,12 @@ define(['jquery'], function ($) {
             }
         };
 
+        that.fadeOut = function(duration) {
+            $(domElement).fadeOut(duration, function(){
+                parent.removeChild(domElement);
+            });
+        };
+
         return that;
     };
 });

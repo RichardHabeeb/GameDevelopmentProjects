@@ -39,7 +39,8 @@ define(['app/Vector', 'app/Sprite', 'app/Settings', 'app/TileMap'], function(Vec
                 var bottomRightNeighborExplored =  row < (Settings.tilesPerColumn - 1) && col < (Settings.tilesPerRow - 1) && explored[currentTile + Settings.tilesPerRow + 1];
 
                 if(!explored[currentTile])
-                    { layout[currentTile] = [1,2,3][Math.floor(Math.random()*3)]; }
+                    { layout[currentTile] = 1; }
+                    //{ layout[currentTile] = [1,2,3][Math.floor(Math.random()*3)]; }
                 else if (!bottomNeighborExplored && !rightNeighborExplored && !topNeighborExplored && !leftNeighborExplored)
                     { layout[currentTile] = 18; }
                 else if (!bottomNeighborExplored && !rightNeighborExplored && !topNeighborExplored)

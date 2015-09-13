@@ -21,16 +21,52 @@ define(function (require) {
     layers[0].tileMap.addLayout(layout);
     layers[0].tileMap.redrawEachFrame = false;
 
-    /* mob layer */
-    MobLayerBuilder(layers[1]);
-
     /* player's layer */
-    var player = Sprite("img/SpaceDudeWalking.png", Vector(0 * Settings.tileSize.x, 0 * Settings.tileSize.y), Vector(0,0), 32, 4);
+    var player = Sprite("img/SpaceDudeWalking.png", Vector(0 * Settings.tileSize.x, 0 * Settings.tileSize.y), Vector(), 32, 4);
     player.pause();
     layers[2].attachSprite(player);
 
+    /* mob layer */
+    var treasures = [];
+    treasures.push(Sprite("img/treasureAnimation.png", Vector(), Vector(), 32, 4));
+    var robot = Sprite("img/RobotComingAlive.png", Vector(), Vector(), 32, 4);
+    robot.pause();
+    var eventTileTable = MobLayerBuilder(layers[1], {
+        pitEvent: function () {
+
+        },
+        pitWarningEvent: function() {
+
+        },
+        jellyEvent: function() {
+
+        },
+        jellyWarningEvent: function() {
+
+        },
+        wumpusEvent: function() {
+
+        },
+        wumpusWarningEvent: function() {
+
+        },
+        treasureEvent: function() {
+
+        },
+        exitEvent: function() {
+            robot.play();
+        },
+        default: function() {
+            console.log(player.position.x);
+        }
+    }, treasures, robot);
+
+
+
+
+
     /* darkness layer */
-    explored = new Uint8Array([
+    var explored = new Uint8Array([
         1, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0,
@@ -75,16 +111,18 @@ define(function (require) {
     var playerMove = function(direction) {
         if(playerIsMoving || player.position.y + direction.y >= Settings.canvasSize.y || player.position.x + direction.x >= Settings.canvasSize.y ||
             player.position.y + direction.y < 0 || player.position.x + direction.x < 0) return;
-        playerIsMoving = true;
-        explored[Math.round((player.position.y + direction.y) / Settings.tileSize.y)*Settings.tilesPerRow + Math.round((player.position.x + direction.x) / Settings.tileSize.x)] = 1;
         var newLayer = Layer(document.body, Settings.canvasSize, Settings.canvasScale);
+        var newTilePosition = Vector(Math.round((player.position.x + direction.x) / Settings.tileSize.x), Math.round((player.position.y + direction.y) / Settings.tileSize.y));
+        playerIsMoving = true;
+        explored[newTilePosition.y*Settings.tilesPerRow + newTilePosition.x] = 1;
         newLayer.tileMap = DarknessTileMapBuilder(explored);
-        layers[3].fadeOut(1000);
+        layers[3].fadeOut(500);
         layers[3] = newLayer;
         player.reverse = direction.x < 0;
         player.tweenPosition(direction, 1, function() {
             player.pause();
             playerIsMoving = false;
+            eventTileTable[newTilePosition.y*Settings.tilesPerRow + newTilePosition.x]();
         });
         player.play();
 

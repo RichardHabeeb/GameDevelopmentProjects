@@ -9,5 +9,6 @@ define(['app/Vector'], function(Vector) {
         numberOfPits: 2,
         numberOfJellys: 2,
         numberOfWumpus: 1,
+        numberOfTreasures: 1,
     };
 });

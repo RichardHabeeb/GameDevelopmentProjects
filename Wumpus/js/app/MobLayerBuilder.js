@@ -1,5 +1,5 @@
 define(['app/Vector', 'app/Sprite', 'app/Settings', 'app/Layer'], function(Vector, Sprite, Settings, Layer) {
-    return function(layer, events, treasures, exit) {
+    return function(layer, events, treasure, exit) {
         var layout = new Array(Settings.tilesPerRow * Settings.tilesPerColumn);
         layout.fill(events.default);
 
@@ -47,10 +47,7 @@ define(['app/Vector', 'app/Sprite', 'app/Settings', 'app/Layer'], function(Vecto
             fillInAdjacentCells(findASpot(Sprite("", Vector()), events.wumpusEvent), "img/Skull.png", events.wumpusWarningEvent);
         }
 
-        for(i = 0; i < Settings.numberOfTreasures; i++) {
-            findASpot(treasures[i], events.treasureEvent);
-        }
-        
+        findASpot(treasure, events.treasureEvent);
         findASpot(exit, events.exitEvent);
 
         return layout;

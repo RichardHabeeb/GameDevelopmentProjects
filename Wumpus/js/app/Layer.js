@@ -34,6 +34,11 @@ define(['jquery'], function ($) {
             sprites.push(sprite);
         };
 
+        that.removeSprite = function(sprite) {
+            var index = sprites.indexOf(sprite);
+            if(index > -1) sprites.splice(index, 1);
+        };
+
         that.draw = function (elapsedTimeSeconds) {
             /* if a TileMap is specified, the other sprites aren't drawn. */
             if(typeof that.tileMap !== "undefined") {

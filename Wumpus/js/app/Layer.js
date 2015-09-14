@@ -27,6 +27,10 @@ define(['jquery'], function ($) {
             'width': sizeVector.x * scale + 'px',
             'height': sizeVector.y * scale + 'px',
             'position': 'absolute',
+            'top': '50%',
+            'left': '50%',
+            'margin-left': -sizeVector.x * scale/2 + 'px',
+            'margin-top': -sizeVector.y * scale/2 + 'px',
         });
         parent.appendChild(domElement);
 

@@ -4,7 +4,7 @@ define(['app/Vector'], function(Vector) {
         canvasScale: 4,
         numberOfLayers: 6,
         tileSize: Vector(32, 32),
-        tilesPerRow: 10, /* default  is 8x4 (256/32) */
+        tilesPerRow: 10,
         tilesPerColumn: 6,
         numberOfPits: 2,
         numberOfJellys: 2,

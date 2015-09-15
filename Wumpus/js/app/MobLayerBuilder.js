@@ -1,54 +1,28 @@
-define(['app/Vector', 'app/Sprite', 'app/Settings', 'app/Layer'], function(Vector, Sprite, Settings, Layer) {
+define(['app/Vector', 'app/Sprite', 'app/Settings', 'app/Layer', 'app/SpriteMap'], function(Vector, Sprite, Settings, Layer, SpriteMap) {
     return function(layer, events, treasure, exit) {
-        var layout = new Array(Settings.tilesPerRow * Settings.tilesPerColumn);
-        layout.fill(events.default);
-
-        function findASpot(sprite, setEvent) {
-            var pos = Vector();
-            do {
-                pos = Vector(
-                    Math.floor(Math.random()*Settings.tilesPerRow),
-                    Math.floor(Math.random()*Settings.tilesPerColumn));
-            } while(layout[pos.y * Settings.tilesPerRow + pos.x] !== events.default); /* todo, add timeout for edge case*/
-            layer.attachSprite(sprite);
-            sprite.position = Vector(pos.x*Settings.tileSize.x, pos.y*Settings.tileSize.y);
-            layout[pos.y * Settings.tilesPerRow + pos.x] = setEvent;
-            return pos;
-        }
-
-        function fillInAdjacentCells(pos, src, setEvent) {
-            if(pos.y !== 0 && layout[(pos.y - 1) * Settings.tilesPerRow + pos.x] === events.default) {
-                layer.attachSprite(Sprite(src, Vector(pos.x*Settings.tileSize.x, (pos.y - 1)*Settings.tileSize.y)));
-                layout[(pos.y - 1) * Settings.tilesPerRow + pos.x] = setEvent;
-            }
-            if((pos.y + 1) !== Settings.tilesPerColumn  && layout[(pos.y + 1) * Settings.tilesPerRow + pos.x] === events.default) {
-                layer.attachSprite(Sprite(src, Vector(pos.x*Settings.tileSize.x, (pos.y + 1)*Settings.tileSize.y)));
-                layout[(pos.y + 1) * Settings.tilesPerRow + pos.x] = setEvent;
-            }
-            if(pos.x !== 0 && layout[pos.y * Settings.tilesPerRow + pos.x - 1] === events.default) {
-                layer.attachSprite(Sprite(src, Vector((pos.x - 1)*Settings.tileSize.x, pos.y*Settings.tileSize.y)));
-                layout[pos.y* Settings.tilesPerRow + pos.x - 1] = setEvent;
-            }
-            if((pos.x + 1) !== Settings.tilesPerRow && layout[pos.y * Settings.tilesPerRow + pos.x + 1] === events.default) {
-                layer.attachSprite(Sprite(src, Vector((pos.x + 1)*Settings.tileSize.x, pos.y*Settings.tileSize.y)));
-                layout[pos.y* Settings.tilesPerRow + pos.x + 1] = setEvent;
-            }
-        }
-
+        var layout = SpriteMap(layer);
+        var pos;
         for(i = 0; i < Settings.numberOfPits; i++) {
-            fillInAdjacentCells(findASpot(Sprite("img/SpaceDirtPit.png", Vector()), events.pitEvent), "img/SpaceDirtWarning.png", events.pitWarningEvent);
-        }
-
-        for(i = 0; i < Settings.numberOfJellys; i++) {
-            fillInAdjacentCells(findASpot(Sprite("img/BrainJelly.png", Vector()), events.jellyEvent), "img/JellyTrace.png", events.jellyWarningEvent);
+            pos = layout.findEmptyPosition();
+            layout.attachSprite(Sprite("img/SpaceDirtPit.png"), pos, events.pitEvent);
+            layout.attachChildren(pos, "img/SpaceDirtWarning.png", events.pitWarningEvent);
         }
 
         for(i = 0; i < Settings.numberOfWumpus; i++) {
-            fillInAdjacentCells(findASpot(Sprite("", Vector()), events.wumpusEvent), "img/Skull.png", events.wumpusWarningEvent);
+            pos = layout.findEmptyPosition();
+            layout.attachSprite(Sprite(""), pos, events.wumpusEvent);
+            layout.attachChildren(pos, "img/Skull.png", events.wumpusWarningEvent);
         }
 
-        findASpot(treasure, events.treasureEvent);
-        findASpot(exit, events.exitEvent);
+        for(i = 0; i < Settings.numberOfJellys; i++) {
+            pos = layout.findEmptyPosition();
+            layout.attachSprite(Sprite("img/BrainJelly.png"), pos, events.jellyEvent);
+            layout.attachChildren(pos, "img/JellyTrace.png", events.jellyWarningEvent);
+        }
+
+
+        layout.attachSprite(treasure, layout.findEmptyPosition(), events.treasureEvent);
+        layout.attachSprite(exit, layout.findEmptyPosition(), events.exitEvent);
 
         return layout;
     };

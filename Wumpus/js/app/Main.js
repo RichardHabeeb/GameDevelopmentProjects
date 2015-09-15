@@ -4,6 +4,7 @@ define(function (require) {
     var Sprite = require('./Sprite');
     var Layer = require('./Layer');
     var TileMap = require('./TileMap');
+    var SpriteMap = require('./SpriteMap');
     var DarknessTileMapBuilder = require('./DarknessTileMapBuilder');
     var MobLayerBuilder = require('./MobLayerBuilder');
     var walkingAudio = new Audio('aud/step2.wav');
@@ -50,7 +51,7 @@ define(function (require) {
         var foundTreasure = false;
         var treasure = Sprite("img/treasureAnimation.png", Vector(), Vector(), 32, 4);
         var robot = Sprite("img/RobotComingAlive.png", Vector(), Vector(), 32, 4);
-        var eventTileTable = null;
+        var mobSpriteMap = null;
         robot.pause();
         var gameEvents = {
             pitEvent: function () {
@@ -60,8 +61,12 @@ define(function (require) {
             pitWarningEvent: function() {
                 pitWarningAudio.play();
             },
-            jellyEvent: function() {
+            jellyEvent: function(sender, pos) {
                 jellyAudio.play();
+                mobSpriteMap.removeParent(pos);
+                var newPos = mobSpriteMap.findEmptyPosition();
+                mobSpriteMap.attachSprite(Sprite("img/BrainJelly.png"), newPos, gameEvents.jellyEvent);
+                mobSpriteMap.attachChildren(newPos, "img/JellyTrace.png", gameEvents.jellyWarningEvent);
                 resetDarkness();
                 resetPlayer();
             },
@@ -100,7 +105,7 @@ define(function (require) {
             default: function() {
             }
         };
-        eventTileTable = MobLayerBuilder(layers[1], gameEvents, treasure, robot);
+        mobSpriteMap = MobLayerBuilder(layers[1], gameEvents, treasure, robot);
 
 
         /* darkness layer */
@@ -116,12 +121,7 @@ define(function (require) {
         var player = null;
         function resetPlayer() {
             layers[2].removeSprite(player);
-            var playerPos = Vector();
-            do {
-                playerPos = Vector(
-                    Math.floor(Math.random()*Settings.tilesPerRow),
-                    Math.floor(Math.random()*Settings.tilesPerColumn));
-            } while(eventTileTable[playerPos.y * Settings.tilesPerRow + playerPos.x] !== gameEvents.default); /* todo, add timeout for edge case*/
+            var playerPos = mobSpriteMap.findEmptyPosition();
             player = Sprite("img/SpaceDudeWalking.png", Vector(playerPos.x*Settings.tileSize.x, playerPos.y*Settings.tileSize.y), Vector(), 32, 4);
             player.pause();
             explored[playerPos.y*Settings.tilesPerRow + playerPos.x] = 1;
@@ -181,7 +181,7 @@ define(function (require) {
                 walkingAudio.pause();
                 player.pause();
                 playerIsMoving = false;
-                eventTileTable[newTilePosition.y*Settings.tilesPerRow + newTilePosition.x]();
+                mobSpriteMap.triggerEvent(newTilePosition);
             });
             player.play();
 

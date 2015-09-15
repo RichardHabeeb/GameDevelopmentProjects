@@ -10,7 +10,7 @@ define(function() {
         };
 
         that.sprite = null;
-        that.event = function(sender) {};
+        that.event = function(sender, position) {};
 
         return that;
     };

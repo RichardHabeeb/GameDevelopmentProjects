@@ -12,6 +12,7 @@ define(['app/Vector'], function(Vector) {
         var animationTimeSeconds = 0;
         var animationComplete = function () {};
         if(typeof framesPerSecond === "undefined") framesPerSecond = 0;
+        if(typeof position === "undefined") position = Vector();
         if(typeof origin === "undefined") origin = Vector();
 
         that.position = Vector(position.x, position.y);

@@ -8,26 +8,20 @@ define(['app/Vector', 'app/Sprite', 'app/Settings', 'app/Grid', 'app/TileMap', '
             layers[i].setZ(i);
         }
 
-        var jelly = Sprite("img/Jelly.png", Vector(2 * Settings.tileSize.x, 2 * Settings.tileSize.y));
-        layers[1].attachDrawable(jelly);
-
-        var jelly2 = Sprite("img/Jelly.png", Vector(6 * Settings.tileSize.x, 2 * Settings.tileSize.y));
-        layers[2].attachDrawable(jelly2);
+        var bunbun = Sprite("img/BunBun.png", Vector(2 * Settings.tileSize.x, 2 * Settings.tileSize.y), Vector(), 32, 8);
+        layers[1].attachDrawable(bunbun);
 
         var tileMap = TileMap();
-        tileMap.addTile("img/Brick 1.png");
-        tileMap.addTile("img/Dirt 1.png");
-        tileMap.addTile("img/Dirt into Brick.png");
+        tileMap.addTile("img/Dirt1.png");
+        tileMap.addTile("img/Dirt2.png");
 
         tileMap.addLayout([
-            1, 1, 1, 1, 1, 1, 1, 1,
-            3, 3, 3, 3, 3, 3, 3, 3,
-            2, 2, 2, 2, 2, 2, 2, 2,
-            2, 2, 2, 2, 2, 2, 2, 2,
-            1, 1, 1, 1, 1, 1, 1, 1,
-            3, 3, 3, 3, 3, 3, 3, 3,
-            2, 2, 2, 2, 2, 2, 2, 2,
-            2, 2, 2, 2, 2, 2, 2, 2,
+            1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+            2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+            1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+            1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+            2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+            1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
         ], Settings.numTiles);
 
         layers[0].attachDrawable(tileMap);
@@ -40,8 +34,8 @@ define(['app/Vector', 'app/Sprite', 'app/Settings', 'app/Grid', 'app/TileMap', '
         };
 
         that.draw = function(elapsedTimeSeconds) {
-            jelly2.position.x -= 10 * elapsedTimeSeconds;
-            that.moveAll(Vector(-20 * elapsedTimeSeconds, -20 * elapsedTimeSeconds));
+            bunbun.position.x += 10 * elapsedTimeSeconds;
+            that.moveAll(Vector(-5 * elapsedTimeSeconds, -5 * elapsedTimeSeconds));
 
             for(var i = 0; i < layers.length; i++) {
                 layers[i].draw(elapsedTimeSeconds);

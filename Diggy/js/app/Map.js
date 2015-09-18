@@ -8,8 +8,16 @@ define(['app/Vector', 'app/Sprite', 'app/Settings', 'app/Grid', 'app/TileMap', '
             layers[i].setZ(i);
         }
 
-        var bunbun = Sprite("img/BunBun.png", Vector(2 * Settings.tileSize.x, 2 * Settings.tileSize.y), Vector(), 32, 8);
-        layers[1].attachDrawable(bunbun);
+        var layerDict = {
+            bgLayer: layers[0],
+            fgLayer: layers[1],
+            playerLayer: layers[2],
+            menuLayer: layers[3],
+        };
+
+        that.attachPlayer = function(playerSprite) {
+            layerDict.playerLayer.attachDrawable(playerSprite);
+        };
 
         var tileMap = TileMap();
         tileMap.addTile("img/Dirt1.png");
@@ -34,9 +42,6 @@ define(['app/Vector', 'app/Sprite', 'app/Settings', 'app/Grid', 'app/TileMap', '
         };
 
         that.draw = function(elapsedTimeSeconds) {
-            bunbun.position.x += 10 * elapsedTimeSeconds;
-            that.moveAll(Vector(-5 * elapsedTimeSeconds, -5 * elapsedTimeSeconds));
-
             for(var i = 0; i < layers.length; i++) {
                 layers[i].draw(elapsedTimeSeconds);
             }

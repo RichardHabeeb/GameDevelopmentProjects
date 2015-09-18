@@ -1,17 +1,17 @@
-define(['app/Vector', 'app/Map'], function(Vector, Map) {
+define(['app/Vector', 'app/Game'], function(Vector, Game) {
     var previousTimeStamp = null;
-    var map = Map();
+    var game = Game();
 
     /* Animation loop */
     var loop = function (timeStamp) {
         if(!previousTimeStamp) previousTimeStamp = timeStamp;
         var elapsedTimeSeconds = (timeStamp - previousTimeStamp) / 1000.0;
 
-        map.draw(elapsedTimeSeconds);
+        game.update(elapsedTimeSeconds);
+        game.draw(elapsedTimeSeconds);
 
         previousTimeStamp = timeStamp;
         window.requestAnimationFrame(loop);
-        //console.log(~~(1 /elapsedTimeSeconds));
     };
     window.requestAnimationFrame(loop);
 });

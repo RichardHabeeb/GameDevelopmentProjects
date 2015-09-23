@@ -6,19 +6,14 @@ define(['app/Vector'], function(Vector) {
         var onFloor = true;
         var frictionCoef = 0.99;
         var stoppedSpeed = 5.0;
-        var states = { standing: 0, running: 1, jumping: 2, digging: 3 };
-        var currentState = states.running;
         var currentSprite = sprites.running;
         if(typeof currentSprite !== "undefined") sprites.running.pause();
         that.mass = 50;
         that.topSpeed = 150;
         that.appliedForce = Vector();
 
-        that.draw = function(elapsedTimeSeconds) {
-            if(typeof currentSprite !== "undefined") {
-                return currentSprite.draw(elapsedTimeSeconds);
-            }
-            return false;
+        that.draw = function(context, elapsedTimeSeconds) {
+            return currentSprite.draw(context, elapsedTimeSeconds);
         };
 
         that.update = function(elapsedTimeSeconds) {
@@ -30,6 +25,24 @@ define(['app/Vector'], function(Vector) {
             velocity.x = Math.max(-that.topSpeed, Math.min(that.topSpeed, velocity.x + acceleration.x * elapsedTimeSeconds));
             velocity.y = Math.max(-that.topSpeed, Math.min(that.topSpeed, velocity.y + acceleration.y * elapsedTimeSeconds));
             if(Math.abs(velocity.x) < stoppedSpeed) velocity.x = 0;
+            if(velocity.x < 0) {
+                if(onFloor) {
+                    currentSprite = sprites.running;
+                    currentSprite.play();
+                }
+                currentSprite.reverse = true;
+            }
+            if(velocity.x > 0) {
+                if(onFloor) {
+                    currentSprite = sprites.running;
+                    currentSprite.play();
+                }
+                currentSprite.reverse = false;
+            }
+            if(velocity.x === 0 && onFloor) {
+                currentSprite = sprites.running;
+                currentSprite.pause();
+            }
             currentSprite.position.x += velocity.x * elapsedTimeSeconds;
             currentSprite.position.y += velocity.y * elapsedTimeSeconds;
 

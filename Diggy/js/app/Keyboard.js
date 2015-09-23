@@ -11,26 +11,35 @@ define([], function() {
             defaultPreventers[key] = state;
         };
 
-        var keyEvents = [];
-        that.addEvent = function(key, event) {
-            keyEvents[key] = event;
+        var keyDownEvents = [];
+        that.addDownEvent = function(key, event) {
+            keyDownEvents[key] = event;
         };
 
-        that.removeEvent = function(key) {
-            keyEvents[key] = undefined;
+        that.removeDownEvent = function(key) {
+            keyDownEvents[key] = undefined;
+        };
+
+        var keyUpEvents = [];
+        that.addUpEvent = function(key, event) {
+            keyUpEvents[key] = event;
+        };
+
+        that.removeUpEvent = function(key) {
+            keyUpEvents[key] = undefined;
         };
 
 
         function keyDownListener(e) {
             var key = e.which || e.keyCode;
-            if(typeof(keyEvents[key]) !== "undefined") keyEvents[key]();
+            if(typeof(keyDownEvents[key]) !== "undefined") keyDownEvents[key]();
             if(typeof(defaultPreventers[key]) !== "undefined" && defaultPreventers[key]) e.preventDefault();
             that.keyPressed[key] = true;
         }
 
         function keyUpListener(e) {
             var key = e.which || e.keyCode;
-            if(typeof(keyEvents[key]) !== "undefined") keyEvents[key]();
+            if(typeof(keyUpEvents[key]) !== "undefined") keyUpEvents[key]();
             if(typeof(defaultPreventers[key]) !== "undefined" && defaultPreventers[key]) e.preventDefault();
             that.keyPressed[key] = false;
         }

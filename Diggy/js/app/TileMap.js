@@ -30,10 +30,10 @@ define(['app/Vector', 'app/Sprite', 'app/Settings', 'app/Grid'], function(Vector
             firstFrameDrawn = false;
         };
 
-        that.draw = function(context) {
+        that.draw = function(context, elapsedTimeSeconds) {
             var ret = 0;
             tileGrid.each(function(cell, pos) {
-                ret += cell.tile.draw(context) ? 1 : 0;
+                ret += cell.tile.draw(context, elapsedTimeSeconds) ? 1 : 0;
             });
             return ret > 0;
         };

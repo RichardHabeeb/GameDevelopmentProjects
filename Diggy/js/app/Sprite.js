@@ -36,7 +36,6 @@ define(['app/Vector'], function(Vector) {
         };
 
         that.play = function () {
-            playhead = 0;
             if(pausedFramesPerSecond !== 0) framesPerSecond = pausedFramesPerSecond;
         };
 

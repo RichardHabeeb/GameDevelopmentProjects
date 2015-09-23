@@ -18,15 +18,13 @@ define(['app/Vector', 'app/Sprite', 'app/Settings', 'app/Keyboard', 'app/Map', '
         var bunbunSprite = Sprite("img/BunBun.png", Vector(2 * Settings.tileSize.x, 2 * Settings.tileSize.y), Vector(), 32, 8);
         var bunbun = Entity({ running: bunbunSprite });
         map.attachPlayer(bunbun);
-        //bunbun.appliedForce.x = 250;
-
-
 
 
         that.update = function(elapsedTimeSeconds) {
-            if(keys.keyPressed[keyCodes.left]) bunbun.appliedForce.x = -250;
-            else if(keys.keyPressed[keyCodes.right]) bunbun.appliedForce.x = 250;
-            else bunbun.appliedForce.x = 0;
+            bunbun.appliedForce.x = 0;
+            if(keys.keyPressed[keyCodes.left]) bunbun.appliedForce.x -= 250;
+            if(keys.keyPressed[keyCodes.right]) bunbun.appliedForce.x += 250;
+
             bunbun.update(elapsedTimeSeconds);
             //map.moveAll(Vector(-50 * elapsedTimeSeconds, -50 * elapsedTimeSeconds));
         };

@@ -31,11 +31,11 @@ define(['app/Vector', 'app/Sprite', 'app/Settings', 'app/Grid'], function(Vector
         };
 
         that.draw = function(context) {
-            var ret = false;
+            var ret = 0;
             tileGrid.each(function(cell, pos) {
-                ret = ret || cell.tile.draw(context);
+                ret += cell.tile.draw(context) ? 1 : 0;
             });
-            return ret;
+            return ret > 0;
         };
 
         return that;

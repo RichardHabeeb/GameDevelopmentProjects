@@ -5,9 +5,9 @@ define(['app/Vector', 'app/Sprite', 'app/Settings', 'app/Grid', 'app/TileMap', '
 
         var bunbunSprite = Sprite("img/BunBun.png", Vector(2 * Settings.tileSize.x, 2 * Settings.tileSize.y), Vector(), 32, 8);
 
-        var bunbun = Entity(bunbunSprite);
-        map.attachPlayer(bunbunSprite);
-        bunbun.appliedForce.x = 250;
+        var bunbun = Entity({ running: bunbunSprite });
+        map.attachPlayer(bunbun);
+        //bunbun.appliedForce.x = 250;
 
 
         that.update = function(elapsedTimeSeconds) {

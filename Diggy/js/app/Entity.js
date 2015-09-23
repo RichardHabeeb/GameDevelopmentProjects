@@ -1,17 +1,24 @@
 define(['app/Vector'], function(Vector) {
-    return function(sprite) {
+    return function(sprites) { /* { running: , jumping: , digging:  } */
         var that = {};
         var velocity = Vector(75, 0);
         var gravity = Vector(0, 9.8);
         var onFloor = true;
         var frictionCoef = 0.99;
-
+        var stoppedSpeed = 2.0;
+        var states = { standing: 0, running: 1, jumping: 2, digging: 3 };
+        var currentState = states.running;
+        var currentSprite = sprites.running;
+        if(typeof currentSprite !== "undefined") sprites.running.pause();
         that.mass = 10;
         that.topSpeed = 75;
         that.appliedForce = Vector();
 
         that.draw = function(elapsedTimeSeconds) {
-            if(typeof sprite !== "undefined") sprite.draw(elapsedTimeSeconds);
+            if(typeof currentSprite !== "undefined") {
+                return currentSprite.draw(elapsedTimeSeconds);
+            }
+            return false;
         };
 
         that.update = function(elapsedTimeSeconds) {
@@ -22,8 +29,9 @@ define(['app/Vector'], function(Vector) {
             if(velocity.x < 0) acceleration.x += frictionForceMag * that.mass;
             velocity.x = Math.min(that.topSpeed, velocity.x + acceleration.x * elapsedTimeSeconds);
             velocity.y = Math.min(that.topSpeed, velocity.y + acceleration.y * elapsedTimeSeconds);
-            sprite.position.x += velocity.x * elapsedTimeSeconds;
-            sprite.position.y += velocity.y * elapsedTimeSeconds;
+            if(Math.abs(velocity.x) < stoppedSpeed) velocity.x = 0;
+            currentSprite.position.x += velocity.x * elapsedTimeSeconds;
+            currentSprite.position.y += velocity.y * elapsedTimeSeconds;
 
         };
 

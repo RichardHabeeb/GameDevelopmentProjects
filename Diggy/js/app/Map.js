@@ -15,8 +15,8 @@ define(['app/Vector', 'app/Sprite', 'app/Settings', 'app/Grid', 'app/TileMap', '
             menuLayer: layers[3],
         };
 
-        that.attachPlayer = function(playerSprite) {
-            layerDict.playerLayer.attachDrawable(playerSprite);
+        that.attachPlayer = function(player) {
+            layerDict.playerLayer.attachDrawable(player);
         };
 
         var tileMap = TileMap();

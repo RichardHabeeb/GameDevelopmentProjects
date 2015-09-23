@@ -28,7 +28,7 @@ define([], function() {
             that.keyPressed[key] = true;
         }
 
-        function keyUpListener() {
+        function keyUpListener(e) {
             var key = e.which || e.keyCode;
             if(typeof(keyEvents[key]) !== "undefined") keyEvents[key]();
             if(typeof(defaultPreventers[key]) !== "undefined" && defaultPreventers[key]) e.preventDefault();

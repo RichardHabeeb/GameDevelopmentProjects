@@ -25,8 +25,11 @@ define(['app/Vector', 'app/Rect'], function(Vector, Rect) {
         };
 
         that.collide = function(offset) {
-            if(offset.y < 0) {
+            if(offset.y < 0 && velocity.y > 0) {
                 onFloor = true;
+                velocity.y = 0;
+            }
+            if(offset.y > 0 && velocity.y < 0) {
                 velocity.y = 0;
             }
             currentSprite.position.x += offset.x;

@@ -1,6 +1,6 @@
-define(['app/Vector', 'app/Game'], function(Vector, Game) {
+define(['app/AssetLoader', 'app/Game'], function(AssetLoader, Game) {
     var previousTimeStamp = null;
-    var game = Game();
+    var game = null;
 
     /* Animation loop */
     var loop = function (timeStamp) {
@@ -13,5 +13,10 @@ define(['app/Vector', 'app/Game'], function(Vector, Game) {
         previousTimeStamp = timeStamp;
         window.requestAnimationFrame(loop);
     };
-    window.requestAnimationFrame(loop);
+
+    AssetLoader.onLoad = function() {
+        window.requestAnimationFrame(loop);
+    };
+    game = Game();
+
 });

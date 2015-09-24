@@ -1,5 +1,5 @@
-define(['app/Vector', 'app/Sprite', 'app/Settings', 'app/Grid'], function(Vector, Sprite, Settings, Grid) {
-    return function () {
+define(['app/Vector', 'app/Sprite', 'app/Settings', 'app/Grid', 'app/Rect'], function(Vector, Sprite, Settings, Grid, Rect) {
+    return function (onLoad) {
         var that = {};
         /* contains each tile as a sprite. */
         var tiles = [];
@@ -11,9 +11,11 @@ define(['app/Vector', 'app/Sprite', 'app/Settings', 'app/Grid'], function(Vector
         var gridSize = Vector();
 
         /* push a generic tile into the pallete */
-        that.addTile = function(src) {
-            //TODO add type checking of src
-            tiles.push(src);
+        that.addTile = function(attr) { /* { src: , solid: , } */
+            //TODO add type checking of attr
+
+            tiles.push(attr);
+
         };
 
         /* add a predefined sprite into the pallete, useful for animated sprites */
@@ -21,11 +23,22 @@ define(['app/Vector', 'app/Sprite', 'app/Settings', 'app/Grid'], function(Vector
             tiles.push(spr);
         };
 
+        that.getCellsTouchingRectangle = function(rect) {
+            return tileGrid.getCellsTouchingRectangle(Rect(
+                ~~(rect.x / Settings.tileSize.x),
+                ~~(rect.y / Settings.tileSize.y),
+                1 + ~~(rect.width / Settings.tileSize.x),
+                1 + ~~(rect.height / Settings.tileSize.y)
+            ));
+        };
+
+
         that.addLayout = function(tileLayout, size) {
             gridSize = Vector(size.x, size.y);
             tileGrid = Grid(gridSize);
             tileGrid.each(function(cell, pos) {
-                cell.tile = Sprite(tiles[tileLayout[pos.y * size.x + pos.x]], Vector(pos.x * Settings.tileSize.x, pos.y * Settings.tileSize.y));
+                cell.tile = Sprite(tiles[tileLayout[pos.y * size.x + pos.x]].src, Vector(pos.x * Settings.tileSize.x, pos.y * Settings.tileSize.y));
+                cell.solid = tiles[tileLayout[pos.y * size.x + pos.x]].solid;
             });
             firstFrameDrawn = false;
         };

@@ -1,4 +1,4 @@
-define(['app/Vector', 'app/Sprite', 'app/Settings', 'app/Grid', 'app/TileMap', 'app/Layer'], function(Vector, Sprite, Settings, Grid, TileMap, Layer) {
+define(['app/Vector', 'app/Rect', 'app/Settings', 'app/Grid', 'app/TileMap', 'app/Layer'], function(Vector, Rect, Settings, Grid, TileMap, Layer) {
     return function() {
         var that = {};
 
@@ -20,15 +20,15 @@ define(['app/Vector', 'app/Sprite', 'app/Settings', 'app/Grid', 'app/TileMap', '
         };
 
         var tileMap = TileMap();
-        tileMap.addTile("img/SquareLightDirt1.png");
-        tileMap.addTile("img/SquareLightDirt2.png");
-        tileMap.addTile("img/SquareLightDirt4.png");
-        tileMap.addTile("img/SquareLightDirt5.png");
+        tileMap.addTile({ src: "img/SquareLightDirt1.png", solid: false });
+        tileMap.addTile({ src: "img/SquareLightDirt2.png", solid: true });
+        tileMap.addTile({ src: "img/SquareLightDirt4.png", solid: true });
+        tileMap.addTile({ src: "img/SquareLightDirt5.png", solid: true });
 
         tileMap.addLayout([
-            1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-            1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-            1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+            4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+            3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+            2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
             2, 3, 2, 4, 2, 2, 3, 3, 2, 2, 4, 2, 2, 3, 4, 4,
             2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
             2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
@@ -37,7 +37,14 @@ define(['app/Vector', 'app/Sprite', 'app/Settings', 'app/Grid', 'app/TileMap', '
         layers[0].attachDrawable(tileMap);
 
         that.checkCollision = function(ent) {
-
+            var rect = ent.getHitbox();
+            var cells = tileMap.getCellsTouchingRectangle(rect);
+            for(var i = 0; i < cells.length; i++) {
+                if(cells[i].solid) {
+                    ent.collide(rect.getOverlapOffset(Rect().buildFromVectors(cells[i].tile.position, cells[i].tile.size)));
+                    rect = ent.getHitbox();
+                }
+            }
         };
 
         that.moveAll = function(offset) {

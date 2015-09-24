@@ -1,4 +1,4 @@
-define(['app/Vector'], function(Vector) {
+define(['app/Vector', 'app/AssetLoader'], function(Vector, AssetLoader) {
     return function(src, position, origin, frameWidth, framesPerSecond, onLoad) {
         var that = {};
         var playhead = 0;
@@ -18,10 +18,15 @@ define(['app/Vector'], function(Vector) {
         if(typeof framesPerSecond === "undefined") framesPerSecond = 0;
         if(typeof position === "undefined") position = Vector();
         if(typeof origin === "undefined") origin = Vector();
+        if(src !== "") AssetLoader.addAsset();
 
         that.position = Vector(position.x, position.y);
         that.size = Vector();
         that.reverse = false;
+
+        that.getFrameWidth = function() {
+            return frameWidth;
+        };
 
         that.visible = function(sizeVector) {
             return (
@@ -97,6 +102,7 @@ define(['app/Vector'], function(Vector) {
             if(typeof frameWidth === "undefined") frameWidth = that.size.x;
             numFrames = Math.round(that.size.x / frameWidth);
             if(typeof onLoad !== "undefined") onLoad();
+            AssetLoader.loadAsset();
         };
 
 

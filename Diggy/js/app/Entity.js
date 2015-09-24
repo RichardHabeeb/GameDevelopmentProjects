@@ -1,4 +1,4 @@
-define(['app/Vector'], function(Vector) {
+define(['app/Vector', 'app/Rect'], function(Vector, Rect) {
     return function(sprites) { /* { running: , jumping: , digging:  } */
         var that = {};
         var velocity = Vector(75, 0);
@@ -22,6 +22,19 @@ define(['app/Vector'], function(Vector) {
                 onFloor = false;
                 velocity.y = that.jumpSpeed;
             }
+        };
+
+        that.collide = function(offset) {
+            if(offset.y < 0) {
+                onFloor = true;
+                velocity.y = 0;
+            }
+            currentSprite.position.x += offset.x;
+            currentSprite.position.y += offset.y;
+        };
+
+        that.getHitbox = function() {
+            return Rect().buildFromVectors(currentSprite.position, Vector(currentSprite.getFrameWidth(), currentSprite.size.y));
         };
 
         that.update = function(elapsedTimeSeconds) {

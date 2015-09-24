@@ -28,12 +28,21 @@ define(['app/Vector', 'app/Sprite', 'app/Settings', 'app/Keyboard', 'app/Map', '
             if(keys.keyPressed[keyCodes.left]) bunbun.appliedForce.x -= 250;
             if(keys.keyPressed[keyCodes.right]) bunbun.appliedForce.x += 250;
 
+
             bunbun.update(elapsedTimeSeconds);
+            map.checkCollision(bunbun);
+
             //map.moveAll(Vector(-50 * elapsedTimeSeconds, -50 * elapsedTimeSeconds));
         };
 
         that.draw = function(elapsedTimeSeconds) {
             map.draw(elapsedTimeSeconds);
+        };
+
+        that.onload = function() {};
+
+        var allSpritesLoaded = function() {
+
         };
 
         return that;

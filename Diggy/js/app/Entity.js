@@ -10,20 +10,30 @@ define(['app/Vector'], function(Vector) {
         if(typeof currentSprite !== "undefined") sprites.running.pause();
         that.mass = 50;
         that.topSpeed = 150;
+        that.jumpSpeed = -300;
         that.appliedForce = Vector();
 
         that.draw = function(context, elapsedTimeSeconds) {
             return currentSprite.draw(context, elapsedTimeSeconds);
         };
 
+        that.jump = function() {
+            if(onFloor) {
+                onFloor = false;
+                velocity.y = that.jumpSpeed;
+            }
+        };
+
         that.update = function(elapsedTimeSeconds) {
             var acceleration = Vector(that.mass * that.appliedForce.x, that.mass * that.appliedForce.y);
-            if(!onFloor) acceleration.y += that.mass * gravity.y;
+            if(!onFloor) {
+                acceleration.y += that.mass * gravity.y;
+            }
             var frictionForceMag = gravity.y * frictionCoef;
             if(velocity.x > 0) acceleration.x -= frictionForceMag * that.mass;
             if(velocity.x < 0) acceleration.x += frictionForceMag * that.mass;
             velocity.x = Math.max(-that.topSpeed, Math.min(that.topSpeed, velocity.x + acceleration.x * elapsedTimeSeconds));
-            velocity.y = Math.max(-that.topSpeed, Math.min(that.topSpeed, velocity.y + acceleration.y * elapsedTimeSeconds));
+            velocity.y = velocity.y + acceleration.y * elapsedTimeSeconds;
             if(Math.abs(velocity.x) < stoppedSpeed) velocity.x = 0;
             if(velocity.x < 0) {
                 if(onFloor) {

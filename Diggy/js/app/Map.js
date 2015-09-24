@@ -20,19 +20,25 @@ define(['app/Vector', 'app/Sprite', 'app/Settings', 'app/Grid', 'app/TileMap', '
         };
 
         var tileMap = TileMap();
-        tileMap.addTile("img/Dirt1.png");
-        tileMap.addTile("img/Dirt2.png");
+        tileMap.addTile("img/SquareLightDirt1.png");
+        tileMap.addTile("img/SquareLightDirt2.png");
+        tileMap.addTile("img/SquareLightDirt4.png");
+        tileMap.addTile("img/SquareLightDirt5.png");
 
         tileMap.addLayout([
             1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+            1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+            1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+            2, 3, 2, 4, 2, 2, 3, 3, 2, 2, 4, 2, 2, 3, 4, 4,
             2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-            1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-            1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
             2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-            1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
         ], Settings.numTiles);
 
         layers[0].attachDrawable(tileMap);
+
+        that.checkCollision = function(ent) {
+
+        };
 
         that.moveAll = function(offset) {
             for(var i = 0; i < layers.length; i++) {

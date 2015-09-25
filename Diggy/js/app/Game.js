@@ -22,9 +22,11 @@ define(['app/Vector', 'app/Sprite', 'app/Settings', 'app/Keyboard', 'app/Map', '
         keys.startListener();
 
 
-        var bunbun = Entity({
-            running: Sprite("img/BunBun.png", Vector(1 * Settings.tileSize.x, 1 * Settings.tileSize.y), Vector(), 32, 12),
-            diggingSide: Sprite("img/BunBunDig.png", Vector(1 * Settings.tileSize.x, 1 * Settings.tileSize.y), Vector(), 32, 12),
+        var bunbun = Entity(Sprite("img/BunBunFull.png", Vector(1 * Settings.tileSize.x, 1 * Settings.tileSize.y), Vector(), 32, 12), {
+            idle: { start: 0, duration: 1 },
+            running: { start: 0, duration: 2 },
+            diggingSide: { start: 2, duration: 5 },
+            diggingDown: { start: 7, duration: 5 },
         });
         bunbun.setHitbox(Rect( /* relative to sprite position */
             8, //x
@@ -34,8 +36,10 @@ define(['app/Vector', 'app/Sprite', 'app/Settings', 'app/Keyboard', 'app/Map', '
         ));
         map.attachPlayer(bunbun);
         keys.addDownEvent(keyCodes.space, bunbun.jump);
-        keys.addDownEvent(keyCodes.z, bunbun.dig);
+        keys.addDownEvent(keyCodes.z, bunbun.digSide);
+        keys.addDownEvent(keyCodes.x, bunbun.digDown);
         keys.addUpEvent(keyCodes.z, bunbun.stopDigging);
+        keys.addUpEvent(keyCodes.x, bunbun.stopDigging);
 
 
         that.update = function(elapsedTimeSeconds) {

@@ -28,7 +28,7 @@ define(['app/Vector', 'app/Rect', 'app/Settings', 'app/Grid', 'app/TileMap', 'ap
         tileMap.addTile({ src: "img/SquareLightDirt4.png", solid: true });
         tileMap.addTile({ src: "img/SquareLightDirt5.png", solid: true });
         tileMap.addTile({ src: "img/SquareLightDirt6.png", solid: true });
-        tileMap.addTile({ src: "img/SquareLightDirt7.png", solid: true });
+        tileMap.addTile({ src: "img/SquareLightDirt8.png", solid: true });
 
         /* generate noise */
         Perlin.persistence(1/16);

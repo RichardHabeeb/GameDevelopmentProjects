@@ -70,7 +70,7 @@ define(['app/Vector', 'app/Rect', 'app/Settings', 'app/Grid', 'app/TileMap', 'ap
             if(rect.y + rect.height > Math.abs(layers[0].position.y) + Settings.canvasSize.y - Settings.canvasShiftMargin) {
                 that.moveAll(Vector(0, (Math.abs(layers[0].position.y) + Settings.canvasSize.y - Settings.canvasShiftMargin) - (rect.y + rect.height)));
             }
-            if(rect.y < Math.abs(layers[0].position.x) + Settings.canvasShiftMargin) {
+            if(rect.y < Math.abs(layers[0].position.y) + Settings.canvasShiftMargin) {
                 that.moveAll(Vector(0, (Math.abs(layers[0].position.y) + Settings.canvasShiftMargin) - (rect.y)));
             }
         };

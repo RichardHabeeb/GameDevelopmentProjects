@@ -1,7 +1,7 @@
-define(['app/Vector', 'app/Rect', 'app/Settings', 'app/Grid', 'app/TileMap', 'app/Layer'], function(Vector, Rect, Settings, Grid, TileMap, Layer) {
+define(['app/Vector', 'app/Rect', 'app/Settings', 'app/Grid', 'app/TileMap', 'app/Layer', 'Perlin'], function(Vector, Rect, Settings, Grid, TileMap, Layer, Perlin) {
     return function() {
         var that = {};
-
+        var x, y;
         var layers = [];
         for(var i = 0; i < Settings.numberOfLayers; i++) {
             layers.push(Layer(document.body, Settings.canvasSize, Settings.canvasScale, Settings.drawableAreaSize));
@@ -24,16 +24,39 @@ define(['app/Vector', 'app/Rect', 'app/Settings', 'app/Grid', 'app/TileMap', 'ap
         tileMap.addTile({ src: "img/SquareLightDirt2.png", solid: true });
         tileMap.addTile({ src: "img/SquareLightDirt4.png", solid: true });
         tileMap.addTile({ src: "img/SquareLightDirt5.png", solid: true });
+        tileMap.addTile({ src: "img/SquareLightDirt7.png", solid: true });
 
-        tileMap.addLayout([
-            4, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2,
-            3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2,
-            2, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4,
-            2, 3, 2, 4, 2, 1, 1, 1, 1, 2, 4, 2, 2, 3, 4, 4,
-            2, 2, 2, 2, 2, 2, 2, 1, 1, 2, 2, 2, 2, 2, 2, 2,
-            2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-        ], Settings.numTiles);
+        /* generate noise */
+        Perlin.persistence(1/16);
+        Perlin.octaves(5);
+        var mapLayout = [];
+        var maxValue = 0;
+        var minValue = 999;
+        for(y = 0; y < Settings.numTiles.y; y++) {
+            for(x = 0; x < Settings.numTiles.x; x++) {
+                var val = Perlin.noise2d(x, y);
+                if(val > maxValue) maxValue = val;
+                if(val < minValue) minValue = val;
+                mapLayout.push(val);
+            }
+        }
+        /* normalize and add map features */
+        for(y = 0; y < Settings.numTiles.y; y++) {
+            for(x = 0; x < Settings.numTiles.x; x++) {
+                i = x + y * Settings.numTiles.x;
+                if(y === 0 || y == Settings.numTiles.y - 1) {
+                    mapLayout[i] = 5;
+                } else if(x === 0 || x == Settings.numTiles.x - 1) {
+                    mapLayout[i] = 5;
+                } else if(y === 1) {
+                    mapLayout[i] = 1;
+                } else {
+                    mapLayout[i] = ~~((tileMap.numTiles() - 3) * mapLayout[i] / maxValue + 0.5) + 1;
+                }
+            }
+        }
 
+        tileMap.addLayout(mapLayout, Settings.numTiles);
         layers[0].attachDrawable(tileMap);
 
         that.checkCollision = function(ent) {

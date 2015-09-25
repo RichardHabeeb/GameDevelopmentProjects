@@ -19,6 +19,9 @@ define(['app/Vector', 'app/AssetLoader'], function(Vector, AssetLoader) {
         if(typeof position === "undefined") position = Vector();
         if(typeof origin === "undefined") origin = Vector();
         if(src !== "") AssetLoader.addAsset();
+        var hidden = false;
+        var showHidden = false;
+        var notHiddenYet = false;
 
         that.position = Vector(position.x, position.y);
         that.size = Vector();
@@ -44,6 +47,16 @@ define(['app/Vector', 'app/AssetLoader'], function(Vector, AssetLoader) {
             if(pausedFramesPerSecond !== 0) framesPerSecond = pausedFramesPerSecond;
         };
 
+        that.hide = function() {
+            notHiddenYet = true;
+            hidden = true;
+        };
+
+        that.show = function() {
+            if(hidden) showHidden = true;
+            hidden = false;
+        };
+
         that.draw = function(context, elapsedTimeSeconds) {
             if(that.size.x === 0) return false;
             if(animationTimeSeconds > 0) {
@@ -62,16 +75,27 @@ define(['app/Vector', 'app/AssetLoader'], function(Vector, AssetLoader) {
 
             var roundedPosition = Vector(~~that.position.x, ~~that.position.y);
             var roundedSize = Vector(~~that.size.x, ~~that.size.y);
+
+            if(hidden) {
+                if(notHiddenYet) {
+                    context.clearRect(previousPosition.x, previousPosition.y, that.size.x, that.size.y);
+                    notHiddenYet = false;
+                }
+                return;
+            }
             if(previousPosition.x != roundedPosition.x || previousPosition.y != roundedPosition.y ||
                 previousSize.x != roundedSize.x || previousSize.y != roundedSize.y ||
                 previousKeyFrame != keyFrame ||
-                previousReverseState != that.reverse) {
+                previousReverseState != that.reverse ||
+                showHidden) {
 
-                context.clearRect(previousPosition.x, previousPosition.y, that.size.x, that.size.y);
+                //TODO rework this into a separate function (clear sprites before redrawing, this may add some gross collision stuff, alternative is time dimensional data structure).
+                if(!showHidden) context.clearRect(previousPosition.x, previousPosition.y, that.size.x, that.size.y);
                 previousPosition = roundedPosition;
                 previousKeyFrame = keyFrame;
                 previousReverseState = that.reverse;
                 previousSize = roundedSize;
+                showHidden = false;
 
                 context.save();
                 var drawX = roundedPosition.x - origin.x;

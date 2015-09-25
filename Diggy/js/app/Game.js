@@ -1,4 +1,4 @@
-define(['app/Vector', 'app/Sprite', 'app/Settings', 'app/Keyboard', 'app/Map', 'app/Entity'], function(Vector, Sprite, Settings, Keyboard, Map, Entity) {
+define(['app/Vector', 'app/Sprite', 'app/Settings', 'app/Keyboard', 'app/Map', 'app/Entity', 'app/Rect'], function(Vector, Sprite, Settings, Keyboard, Map, Entity, Rect) {
     return function() {
         var that = {};
         var map = Map();
@@ -8,6 +8,8 @@ define(['app/Vector', 'app/Sprite', 'app/Settings', 'app/Keyboard', 'app/Map', '
             left: 37,
             right: 39,
             space: 32,
+            z: 90,
+            x: 88,
         };
         var keys = Keyboard();
         keys.preventDefault(keyCodes.up);
@@ -15,25 +17,35 @@ define(['app/Vector', 'app/Sprite', 'app/Settings', 'app/Keyboard', 'app/Map', '
         keys.preventDefault(keyCodes.left);
         keys.preventDefault(keyCodes.right);
         keys.preventDefault(keyCodes.space);
+        keys.preventDefault(keyCodes.z);
+        keys.preventDefault(keyCodes.x);
         keys.startListener();
 
-        var bunbunSprite = Sprite("img/BunBun.png", Vector(2 * Settings.tileSize.x, 2 * Settings.tileSize.y), Vector(), 32, 12);
-        var bunbun = Entity({ running: bunbunSprite });
+
+        var bunbun = Entity({
+            running: Sprite("img/BunBun.png", Vector(1 * Settings.tileSize.x, 1 * Settings.tileSize.y), Vector(), 32, 12),
+            diggingSide: Sprite("img/BunBunDig.png", Vector(1 * Settings.tileSize.x, 1 * Settings.tileSize.y), Vector(), 32, 12),
+        });
+        bunbun.setHitbox(Rect( /* relative to sprite position */
+            8, //x
+            1, //y
+            15, //width
+            31 //height
+        ));
         map.attachPlayer(bunbun);
         keys.addDownEvent(keyCodes.space, bunbun.jump);
+        keys.addDownEvent(keyCodes.z, bunbun.dig);
+        keys.addUpEvent(keyCodes.z, bunbun.stopDigging);
 
 
         that.update = function(elapsedTimeSeconds) {
             bunbun.appliedForce.x = 0;
-            if(keys.keyPressed[keyCodes.left]) bunbun.appliedForce.x -= 250;
-            if(keys.keyPressed[keyCodes.right]) bunbun.appliedForce.x += 250;
-
+            if(keys.keyPressed[keyCodes.left]) bunbun.appliedForce.x -= Settings.playerMovementForce;
+            if(keys.keyPressed[keyCodes.right]) bunbun.appliedForce.x += Settings.playerMovementForce;
 
             bunbun.update(elapsedTimeSeconds);
             map.checkCollision(bunbun);
             map.checkBorderCollision(bunbun);
-
-            //map.moveAll(Vector(-50 * elapsedTimeSeconds, -50 * elapsedTimeSeconds));
         };
 
         that.draw = function(elapsedTimeSeconds) {

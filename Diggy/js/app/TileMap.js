@@ -18,6 +18,10 @@ define(['app/Vector', 'app/Sprite', 'app/Settings', 'app/Grid', 'app/Rect'], fun
 
         };
 
+        that.numTiles = function() {
+            return tiles.length;
+        };
+
         /* add a predefined sprite into the pallete, useful for animated sprites */
         that.addSprite = function(spr) {
             tiles.push(spr);
@@ -27,8 +31,10 @@ define(['app/Vector', 'app/Sprite', 'app/Settings', 'app/Grid', 'app/Rect'], fun
             return tileGrid.getRectangleOfCells(Rect(
                 ~~(rect.x / Settings.tileSize.x),
                 ~~(rect.y / Settings.tileSize.y),
-                1 + ~~(rect.width / Settings.tileSize.x),
-                1 + ~~(rect.height / Settings.tileSize.y)
+                1 + ~~((rect.x + rect.width) / Settings.tileSize.x) - ~~(rect.x / Settings.tileSize.x),
+                1 + ~~((rect.y + rect.height) / Settings.tileSize.y) - ~~(rect.y / Settings.tileSize.y)
+                //1 + ~~(rect.width / Settings.tileSize.x),
+                //1 + ~~(rect.height / Settings.tileSize.y)
             ));
         };
 

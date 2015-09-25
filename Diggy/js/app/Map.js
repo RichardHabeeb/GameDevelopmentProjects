@@ -26,11 +26,11 @@ define(['app/Vector', 'app/Rect', 'app/Settings', 'app/Grid', 'app/TileMap', 'ap
         tileMap.addTile({ src: "img/SquareLightDirt5.png", solid: true });
 
         tileMap.addLayout([
-            4, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-            3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-            2, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-            2, 3, 2, 4, 2, 2, 3, 3, 2, 2, 4, 2, 2, 3, 4, 4,
-            2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+            4, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2,
+            3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2,
+            2, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4,
+            2, 3, 2, 4, 2, 1, 1, 1, 1, 2, 4, 2, 2, 3, 4, 4,
+            2, 2, 2, 2, 2, 2, 2, 1, 1, 2, 2, 2, 2, 2, 2, 2,
             2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
         ], Settings.numTiles);
 
@@ -38,12 +38,40 @@ define(['app/Vector', 'app/Rect', 'app/Settings', 'app/Grid', 'app/TileMap', 'ap
 
         that.checkCollision = function(ent) {
             var rect = ent.getHitbox();
+
+            /* check nearby cells and resolve each collision */
             var cells = tileMap.getCellsTouchingRectangle(rect);
             for(var i = 0; i < cells.length; i++) {
                 if(cells[i].solid) {
                     ent.collide(rect.getOverlapOffset(Rect().buildFromVectors(cells[i].tile.position, cells[i].tile.size)));
                     rect = ent.getHitbox();
                 }
+            }
+
+            /* check for absense of solid floor tiles */
+            var floorCells = tileMap.getCellsBeneathRectangle(rect);
+            var solid = false;
+            for(i = 0; i < cells.length; i++) {
+                solid = solid || cells[i].solid;
+            }
+            if(!solid) ent.startFalling();
+
+        };
+
+
+        that.checkBorderCollision = function(ent) {
+            var rect = ent.getHitbox();
+            if(rect.x + rect.width > Math.abs(layers[0].position.x) + Settings.canvasSize.x - Settings.canvasShiftMargin) {
+                that.moveAll(Vector((Math.abs(layers[0].position.x) + Settings.canvasSize.x - Settings.canvasShiftMargin) - (rect.x + rect.width), 0));
+            }
+            if(rect.x < Math.abs(layers[0].position.x) + Settings.canvasShiftMargin) {
+                that.moveAll(Vector((Math.abs(layers[0].position.x) + Settings.canvasShiftMargin) - (rect.x) , 0));
+            }
+            if(rect.y + rect.height > Math.abs(layers[0].position.y) + Settings.canvasSize.y - Settings.canvasShiftMargin) {
+                that.moveAll(Vector(0, (Math.abs(layers[0].position.y) + Settings.canvasSize.y - Settings.canvasShiftMargin) - (rect.y + rect.height)));
+            }
+            if(rect.y < Math.abs(layers[0].position.x) + Settings.canvasShiftMargin) {
+                that.moveAll(Vector(0, (Math.abs(layers[0].position.y) + Settings.canvasShiftMargin) - (rect.y)));
             }
         };
 

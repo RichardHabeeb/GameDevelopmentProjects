@@ -36,6 +36,10 @@ define(['app/Vector', 'app/Rect'], function(Vector, Rect) {
             currentSprite.position.y += offset.y;
         };
 
+        that.startFalling = function() {
+            if(onFloor) onFloor = false;
+        };
+
         that.getHitbox = function() {
             return Rect().buildFromVectors(currentSprite.position, Vector(currentSprite.getFrameWidth(), currentSprite.size.y));
         };

@@ -24,9 +24,18 @@ define(['app/Vector', 'app/Sprite', 'app/Settings', 'app/Grid', 'app/Rect'], fun
         };
 
         that.getCellsTouchingRectangle = function(rect) {
-            return tileGrid.getCellsTouchingRectangle(Rect(
+            return tileGrid.getRectangleOfCells(Rect(
                 ~~(rect.x / Settings.tileSize.x),
                 ~~(rect.y / Settings.tileSize.y),
+                1 + ~~(rect.width / Settings.tileSize.x),
+                1 + ~~(rect.height / Settings.tileSize.y)
+            ));
+        };
+
+        that.getCellsBeneathRectangle = function(rect) {
+            return tileGrid.getRectangleOfCells(Rect(
+                ~~(rect.x / Settings.tileSize.x),
+                1 + ~~(rect.height / Settings.tileSize.y),
                 1 + ~~(rect.width / Settings.tileSize.x),
                 1 + ~~(rect.height / Settings.tileSize.y)
             ));

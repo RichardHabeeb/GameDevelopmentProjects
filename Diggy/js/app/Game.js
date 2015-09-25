@@ -31,6 +31,7 @@ define(['app/Vector', 'app/Sprite', 'app/Settings', 'app/Keyboard', 'app/Map', '
 
             bunbun.update(elapsedTimeSeconds);
             map.checkCollision(bunbun);
+            map.checkBorderCollision(bunbun);
 
             //map.moveAll(Vector(-50 * elapsedTimeSeconds, -50 * elapsedTimeSeconds));
         };

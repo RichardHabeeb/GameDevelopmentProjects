@@ -38,7 +38,7 @@ define(['app/Vector', 'app/Cell', 'app/Direction'], function(Vector, Cell, Direc
         };
 
 
-        that.getCellsTouchingRectangle = function(rect) {
+        that.getRectangleOfCells = function(rect) {
             var ret = [];
             for(var y = rect.y; y < (rect.y + rect.height); y++) {
                 for(var x = rect.x; x < (rect.x + rect.width); x++) {

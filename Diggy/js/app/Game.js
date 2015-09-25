@@ -40,7 +40,10 @@ define(['app/Vector', 'app/Sprite', 'app/Settings', 'app/Keyboard', 'app/Map', '
             map.digAdjacentTile(bunbun);
             bunbun.digSide();
          });
-        keys.addDownEvent(keyCodes.x, bunbun.digDown);
+        keys.addDownEvent(keyCodes.x, function() {
+            map.digAdjacentTile(bunbun, true);
+            bunbun.digDown();
+        });
         keys.addUpEvent(keyCodes.z, bunbun.stopDigging);
         keys.addUpEvent(keyCodes.x, bunbun.stopDigging);
 

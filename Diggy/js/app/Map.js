@@ -64,10 +64,12 @@ define(['app/Vector', 'app/Rect', 'app/Settings', 'app/Grid', 'app/TileMap', 'ap
         layers[0].attachDrawable(tileMap);
 
 
-        that.digAdjacentTile = function(ent) {
+        that.digAdjacentTile = function(ent, down) {
             if(!ent.isDigging()) {
                 var shovelPos = ent.getShovelPosition();
-                if(ent.spriteFacingLeft()) {
+                if(down) {
+                    shovelPos.y += Settings.tileSize.y;
+                } else if(ent.spriteFacingLeft()) {
                     shovelPos.x -= Settings.tileSize.x;
                 } else {
                     shovelPos.x += Settings.tileSize.x;

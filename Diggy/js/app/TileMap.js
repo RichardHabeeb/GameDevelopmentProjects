@@ -5,6 +5,7 @@ define(['app/Vector', 'app/Sprite', 'app/Settings', 'app/Grid', 'app/Rect'], fun
         var tiles = [];
         /* array of indecies into tiles */
         var tileGrid = null;
+        var cellsToSwap = [];
         /* the zero tile is always clear */
         tiles.push("");
         that.position = Vector();
@@ -33,9 +34,13 @@ define(['app/Vector', 'app/Sprite', 'app/Settings', 'app/Grid', 'app/Rect'], fun
                 ~~(rect.y / Settings.tileSize.y),
                 1 + ~~((rect.x + rect.width) / Settings.tileSize.x) - ~~(rect.x / Settings.tileSize.x),
                 1 + ~~((rect.y + rect.height) / Settings.tileSize.y) - ~~(rect.y / Settings.tileSize.y)
-                //1 + ~~(rect.width / Settings.tileSize.x),
-                //1 + ~~(rect.height / Settings.tileSize.y)
             ));
+        };
+
+        that.swapTilesOfCell = function(cell, id) {
+            cell.tile = Sprite(tiles[id].src, Vector(cell.tile.position.x, cell.tile.position.y));
+            cell.solid = tiles[id].solid;
+            cell.soft = tiles[id].soft;
         };
 
         that.getCellsBeneathRectangle = function(rect) {
@@ -61,7 +66,6 @@ define(['app/Vector', 'app/Sprite', 'app/Settings', 'app/Grid', 'app/Rect'], fun
                 cell.solid = tiles[tileLayout[pos.y * size.x + pos.x]].solid;
                 cell.soft = tiles[tileLayout[pos.y * size.x + pos.x]].soft;
             });
-            firstFrameDrawn = false;
         };
 
         that.draw = function(context, elapsedTimeSeconds) {

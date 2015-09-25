@@ -82,7 +82,7 @@ define(['app/Vector', 'app/Rect', 'app/Settings', 'app/Grid', 'app/TileMap', 'ap
                         },
                         complete: function() {
                             layerDict.fgLayer.removeDrawable(cracks);
-                            console.log("mined");
+                            tileMap.swapTilesOfCell(dugCell, 1);
                         }
                     });
                 }

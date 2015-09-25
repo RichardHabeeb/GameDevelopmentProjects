@@ -82,7 +82,6 @@ define(['app/Vector', 'app/AssetLoader'], function(Vector, AssetLoader) {
                 }
             }
             playhead += elapsedTimeSeconds;
-            //keyFrame = ~~(playhead * framesPerSecond) % numFrames;
             keyFrame = animationBounds[that.currentAnimation].start + ~~(playhead * framesPerSecond) % animationBounds[that.currentAnimation].numFrames;
 
             var roundedPosition = Vector(~~that.position.x, ~~that.position.y);
@@ -92,8 +91,9 @@ define(['app/Vector', 'app/AssetLoader'], function(Vector, AssetLoader) {
                 if(notHiddenYet) {
                     context.clearRect(previousPosition.x, previousPosition.y, that.size.x, that.size.y);
                     notHiddenYet = false;
+                    return true;
                 }
-                return;
+                return false;
             }
             if(previousPosition.x != roundedPosition.x || previousPosition.y != roundedPosition.y ||
                 previousSize.x != roundedSize.x || previousSize.y != roundedSize.y ||
@@ -108,6 +108,7 @@ define(['app/Vector', 'app/AssetLoader'], function(Vector, AssetLoader) {
                 previousKeyFrame = keyFrame;
                 previousReverseState = that.reverse;
                 previousSize = roundedSize;
+                previousAnimation = that.currentAnimation;
                 showHidden = false;
 
                 context.save();

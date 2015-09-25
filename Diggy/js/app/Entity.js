@@ -78,6 +78,7 @@ define(['app/Vector', 'app/Rect', 'app/Settings'], function(Vector, Rect, Settin
             stopDiggingEvent = events.abort;
             timeoutId = setTimeout(function() {
                 events.complete();
+                stopDiggingEvent = function() {};
             }, Settings.tileDigTime * 1000);
         };
 

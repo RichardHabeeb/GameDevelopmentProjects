@@ -5,6 +5,7 @@ define(['jquery', 'app/Vector'], function ($, Vector) {
         var preRenderedContext = preRenderedCanvas.getContext('2d');
         var domElement = document.createElement('canvas');
         var sprites = [];
+        var toRemoveQueue = [];
         var previousPosition = null;
 
         that.position = Vector();
@@ -48,12 +49,21 @@ define(['jquery', 'app/Vector'], function ($, Vector) {
 
         that.removeDrawable = function(sprite) {
             var index = sprites.indexOf(sprite);
-            if(index > -1) sprites.splice(index, 1);
+            if(index > -1) {
+                toRemoveQueue.push(sprites[index]);
+                sprites[index].hide();
+                sprites.splice(index, 1);
+            }
         };
 
         that.draw = function (elapsedTimeSeconds) {
             var redrawCount = 0;
-            for(var i = 0; i < sprites.length; i++) {
+            /* make sure that draw hides the sprite before removing it */
+            for(var i = 0; i < toRemoveQueue.length; i++) {
+                redrawCount += toRemoveQueue[i].draw(preRenderedContext, elapsedTimeSeconds) ? 1 : 0;
+            }
+            toRemoveQueue = [];
+            for(i = 0; i < sprites.length; i++) {
                 redrawCount += sprites[i].draw(preRenderedContext, elapsedTimeSeconds) ? 1 : 0;
             }
             var roundedPosition = Vector(~~that.position.x, ~~that.position.y);

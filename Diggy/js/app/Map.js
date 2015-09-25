@@ -21,9 +21,13 @@ define(['app/Vector', 'app/Rect', 'app/Settings', 'app/Grid', 'app/TileMap', 'ap
 
         var tileMap = TileMap();
         tileMap.addTile({ src: "img/SquareLightDirt1.png", solid: false });
+        tileMap.addTile({ src: "img/SquareLightDirt1.png", solid: false });
+        tileMap.addTile({ src: "img/SquareLightDirt1.png", solid: false });
         tileMap.addTile({ src: "img/SquareLightDirt2.png", solid: true });
+        tileMap.addTile({ src: "img/SquareLightDirt3.png", solid: true });
         tileMap.addTile({ src: "img/SquareLightDirt4.png", solid: true });
         tileMap.addTile({ src: "img/SquareLightDirt5.png", solid: true });
+        tileMap.addTile({ src: "img/SquareLightDirt6.png", solid: true });
         tileMap.addTile({ src: "img/SquareLightDirt7.png", solid: true });
 
         /* generate noise */
@@ -45,9 +49,9 @@ define(['app/Vector', 'app/Rect', 'app/Settings', 'app/Grid', 'app/TileMap', 'ap
             for(x = 0; x < Settings.numTiles.x; x++) {
                 i = x + y * Settings.numTiles.x;
                 if(y === 0 || y == Settings.numTiles.y - 1) {
-                    mapLayout[i] = 5;
+                    mapLayout[i] = tileMap.numTiles() - 1;
                 } else if(x === 0 || x == Settings.numTiles.x - 1) {
-                    mapLayout[i] = 5;
+                    mapLayout[i] = tileMap.numTiles() - 1;
                 } else if(y === 1) {
                     mapLayout[i] = 1;
                 } else {

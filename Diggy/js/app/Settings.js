@@ -8,5 +8,6 @@ define(['app/Vector'], function(Vector) {
         drawableAreaSize: Vector(16*32, 6*32),
         numTiles: Vector(16, 6), /* this can go over the bounds of the canvas */
         playerMovementForce: 250,
+        tileDigTime: 1,
     };
 });

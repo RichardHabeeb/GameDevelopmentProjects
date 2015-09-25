@@ -47,6 +47,11 @@ define(['app/Vector', 'app/Sprite', 'app/Settings', 'app/Grid', 'app/Rect'], fun
             ));
         };
 
+        that.getCellAtPoint = function(pos) {
+            return tileGrid.getCell(Vector(
+                ~~(pos.x / Settings.tileSize.x),
+                ~~(pos.y / Settings.tileSize.y)));
+        };
 
         that.addLayout = function(tileLayout, size) {
             gridSize = Vector(size.x, size.y);
@@ -54,6 +59,7 @@ define(['app/Vector', 'app/Sprite', 'app/Settings', 'app/Grid', 'app/Rect'], fun
             tileGrid.each(function(cell, pos) {
                 cell.tile = Sprite(tiles[tileLayout[pos.y * size.x + pos.x]].src, Vector(pos.x * Settings.tileSize.x, pos.y * Settings.tileSize.y));
                 cell.solid = tiles[tileLayout[pos.y * size.x + pos.x]].solid;
+                cell.soft = tiles[tileLayout[pos.y * size.x + pos.x]].soft;
             });
             firstFrameDrawn = false;
         };

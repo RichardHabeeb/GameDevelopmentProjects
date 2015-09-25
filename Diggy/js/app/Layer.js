@@ -52,13 +52,13 @@ define(['jquery', 'app/Vector'], function ($, Vector) {
         };
 
         that.draw = function (elapsedTimeSeconds) {
-            var redraw = false;
+            var redrawCount = 0;
             for(var i = 0; i < sprites.length; i++) {
-                redraw = redraw || sprites[i].draw(preRenderedContext, elapsedTimeSeconds);
+                redrawCount += sprites[i].draw(preRenderedContext, elapsedTimeSeconds) ? 1 : 0;
             }
             var roundedPosition = Vector(~~that.position.x, ~~that.position.y);
 
-            if(redraw || previousPosition === null || previousPosition.x != roundedPosition.x || previousPosition.y != roundedPosition.y) {
+            if(redrawCount > 0 || previousPosition === null || previousPosition.x != roundedPosition.x || previousPosition.y != roundedPosition.y) {
                 previousPosition = roundedPosition;
                 that.context.save();
                 that.context.clearRect(0, 0, visibleSizeVector.x, visibleSizeVector.y);

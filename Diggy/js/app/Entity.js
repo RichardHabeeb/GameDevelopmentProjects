@@ -1,4 +1,4 @@
-define(['app/Vector', 'app/Rect'], function(Vector, Rect) {
+define(['app/Vector', 'app/Rect', 'app/Settings'], function(Vector, Rect, Settings) {
     return function(sprite, animations) { /* running: {start: , duration: }, diggingSide: {start: , duration: }, diggingDown: {start: , duration: } */
         var that = {};
         var velocity = Vector(75, 0);
@@ -8,6 +8,8 @@ define(['app/Vector', 'app/Rect'], function(Vector, Rect) {
         var stoppedSpeed = 5.0;
         var digging = false;
         var hitbox = null;
+        var timeoutId = 0;
+        var stopDiggingEvent = function() {};
         that.mass = 50;
         that.topSpeed = 150;
         that.jumpSpeed = -300;
@@ -17,6 +19,7 @@ define(['app/Vector', 'app/Rect'], function(Vector, Rect) {
         sprite.addAnimationBounds("diggingSide", animations.diggingSide.start, animations.diggingSide.duration);
         sprite.addAnimationBounds("diggingDown", animations.diggingDown.start, animations.diggingDown.duration);
         sprite.currentAnimation = "idle";
+
 
         that.draw = function(context, elapsedTimeSeconds) {
             return sprite.draw(context, elapsedTimeSeconds);
@@ -62,19 +65,44 @@ define(['app/Vector', 'app/Rect'], function(Vector, Rect) {
             }
         };
 
-        that.digSide = function () {
+        that.spriteFacingLeft = function() {
+            return sprite.reverse;
+        };
+
+        that.getShovelPosition = function() {
+            var hit = that.getHitbox();
+            return Vector(hit.x + hit.width / 2, hit.y + hit.height / 2);
+        };
+
+        that.startDigTimer = function(events) {
+            stopDiggingEvent = events.abort;
+            timeoutId = setTimeout(function() {
+                events.complete();
+            }, Settings.tileDigTime * 1000);
+        };
+
+        that.digSide = function() {
+            if(onFloor) velocity.x = 0;
             sprite.currentAnimation = "diggingSide";
             digging = true;
         };
 
         that.digDown = function () {
+            if(onFloor) velocity.x = 0;
             sprite.currentAnimation = "diggingDown";
             digging = true;
         };
 
         that.stopDigging = function() {
             sprite.currentAnimation = "idle";
+            stopDiggingEvent();
+            stopDiggingEvent = function() {};
+            clearTimeout(timeoutId);
             digging = false;
+        };
+
+        that.isDigging = function() {
+            return digging;
         };
 
 

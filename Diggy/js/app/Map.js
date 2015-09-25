@@ -1,4 +1,4 @@
-define(['app/Vector', 'app/Rect', 'app/Settings', 'app/Grid', 'app/TileMap', 'app/Layer', 'Perlin'], function(Vector, Rect, Settings, Grid, TileMap, Layer, Perlin) {
+define(['app/Vector', 'app/Rect', 'app/Settings', 'app/Grid', 'app/TileMap', 'app/Layer', 'app/Sprite', 'Perlin'], function(Vector, Rect, Settings, Grid, TileMap, Layer, Sprite, Perlin) {
     return function() {
         var that = {};
         var x, y;
@@ -20,15 +20,15 @@ define(['app/Vector', 'app/Rect', 'app/Settings', 'app/Grid', 'app/TileMap', 'ap
         };
 
         var tileMap = TileMap();
-        tileMap.addTile({ src: "img/SquareLightDirt1.png", solid: false });
-        tileMap.addTile({ src: "img/SquareLightDirt1.png", solid: false });
-        tileMap.addTile({ src: "img/SquareLightDirt1.png", solid: false });
-        tileMap.addTile({ src: "img/SquareLightDirt2.png", solid: true });
-        tileMap.addTile({ src: "img/SquareLightDirt3.png", solid: true });
-        tileMap.addTile({ src: "img/SquareLightDirt4.png", solid: true });
-        tileMap.addTile({ src: "img/SquareLightDirt5.png", solid: true });
-        tileMap.addTile({ src: "img/SquareLightDirt6.png", solid: true });
-        tileMap.addTile({ src: "img/SquareLightDirt8.png", solid: true });
+        tileMap.addTile({ src: "img/SquareLightDirt1.png", solid: false, soft: false });
+        tileMap.addTile({ src: "img/SquareLightDirt1.png", solid: false, soft: false });
+        tileMap.addTile({ src: "img/SquareLightDirt1.png", solid: false, soft: false });
+        tileMap.addTile({ src: "img/SquareLightDirt2.png", solid: true, soft: true });
+        tileMap.addTile({ src: "img/SquareLightDirt3.png", solid: true, soft: true });
+        tileMap.addTile({ src: "img/SquareLightDirt4.png", solid: true, soft: true });
+        tileMap.addTile({ src: "img/SquareLightDirt5.png", solid: true, soft: true });
+        tileMap.addTile({ src: "img/SquareLightDirt6.png", solid: true, soft: true });
+        tileMap.addTile({ src: "img/SquareLightDirt8.png", solid: true, soft: false });
 
         /* generate noise */
         Perlin.persistence(1/16);
@@ -62,6 +62,32 @@ define(['app/Vector', 'app/Rect', 'app/Settings', 'app/Grid', 'app/TileMap', 'ap
 
         tileMap.addLayout(mapLayout, Settings.numTiles);
         layers[0].attachDrawable(tileMap);
+
+
+        that.digAdjacentTile = function(ent) {
+            if(!ent.isDigging()) {
+                var shovelPos = ent.getShovelPosition();
+                if(ent.spriteFacingLeft()) {
+                    shovelPos.x -= Settings.tileSize.x;
+                } else {
+                    shovelPos.x += Settings.tileSize.x;
+                }
+                var dugCell = tileMap.getCellAtPoint(shovelPos);
+                if(dugCell.soft) {
+                    var cracks = Sprite("img/Cracking.png", Vector(dugCell.tile.position.x, dugCell.tile.position.y), Vector(), Settings.tileSize.x, 5/Settings.tileDigTime);
+                    layerDict.fgLayer.attachDrawable(cracks);
+                    ent.startDigTimer({
+                        abort: function() {
+                            layerDict.fgLayer.removeDrawable(cracks);
+                        },
+                        complete: function() {
+                            layerDict.fgLayer.removeDrawable(cracks);
+                            console.log("mined");
+                        }
+                    });
+                }
+            }
+        };
 
         that.checkCollision = function(ent) {
             var rect = ent.getHitbox();

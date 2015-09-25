@@ -36,7 +36,10 @@ define(['app/Vector', 'app/Sprite', 'app/Settings', 'app/Keyboard', 'app/Map', '
         ));
         map.attachPlayer(bunbun);
         keys.addDownEvent(keyCodes.space, bunbun.jump);
-        keys.addDownEvent(keyCodes.z, bunbun.digSide);
+        keys.addDownEvent(keyCodes.z, function() {
+            map.digAdjacentTile(bunbun);
+            bunbun.digSide();
+         });
         keys.addDownEvent(keyCodes.x, bunbun.digDown);
         keys.addUpEvent(keyCodes.z, bunbun.stopDigging);
         keys.addUpEvent(keyCodes.x, bunbun.stopDigging);
@@ -44,8 +47,8 @@ define(['app/Vector', 'app/Sprite', 'app/Settings', 'app/Keyboard', 'app/Map', '
 
         that.update = function(elapsedTimeSeconds) {
             bunbun.appliedForce.x = 0;
-            if(keys.keyPressed[keyCodes.left]) bunbun.appliedForce.x -= Settings.playerMovementForce;
-            if(keys.keyPressed[keyCodes.right]) bunbun.appliedForce.x += Settings.playerMovementForce;
+            if(keys.keyPressed[keyCodes.left] && !bunbun.isDigging()) bunbun.appliedForce.x -= Settings.playerMovementForce;
+            if(keys.keyPressed[keyCodes.right] && !bunbun.isDigging()) bunbun.appliedForce.x += Settings.playerMovementForce;
 
             bunbun.update(elapsedTimeSeconds);
             map.checkCollision(bunbun);

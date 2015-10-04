@@ -1,0 +1,7 @@
+{
+  "name": "Rampage",
+  "version": "0.0.1",
+  "dependencies": {
+    "browserify": "11.2.0"
+  }
+}

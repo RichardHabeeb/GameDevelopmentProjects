@@ -2,6 +2,9 @@
   "name": "Rampage",
   "version": "0.0.1",
   "dependencies": {
-    "browserify": "11.2.0"
+    "browserify": "11.x.x",
+    "grunt": "0.4.x",
+    "grunt-browserify": "4.x.x",
+    "grunt-contrib-watch": "0.6.x"
   }
 }

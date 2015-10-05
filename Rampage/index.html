@@ -17,7 +17,12 @@
           Rules:
         </div>
         <div class="col-sm-10">
-          <textarea class="form-control" style='min-height:100px;' id='rules' data-toggle="tooltip" data-placement="top" title="Write regex rules in JSON.">[["B","BB"],["A","B[-(45)A]+(45)A"]]</textarea>
+          <textarea class="form-control" style='min-height:100px;' id='rules' data-toggle="tooltip" data-placement="top" title="Write regex rules in JSON.">
+[
+["W","WW"],
+["R","RR"]
+]
+          </textarea>
         </div>
       </div>
       <div class="row">
@@ -25,13 +30,13 @@
           Axiom:
         </div>
         <div class="col-sm-4">
-          <input type="text" class="form-control" id='axiom' value="A" />
+          <input type="text" class="form-control" id='axiom' value="#(#eee)|(#333)W-(45)R-(90)R-(45)W" />
         </div>
         <div class="col-sm-2">
           Iterations:
         </div>
         <div class="col-sm-4">
-          <input type="text" class="form-control" id='iterations' value="5" />
+          <input type="text" class="form-control" id='iterations' value="3" />
         </div>
       </div>
       <div class="row">

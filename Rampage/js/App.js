@@ -24,6 +24,6 @@ window.onload = function() {
         var canvasHeight =  Math.floor($(canvas).height());
         var canvasWidth = Math.floor($(canvas).width());
         context.clearRect(0,0, canvasWidth, canvasHeight);
-        lSystem.render(Math.floor(canvasWidth / 2), canvasHeight, context);
+        lSystem.render(Math.floor(canvasWidth / 2), canvasHeight - 1, context);
     });
 };

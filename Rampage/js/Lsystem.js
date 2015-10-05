@@ -80,6 +80,8 @@ module.exports = (function (){
         var stack = [],
         x = xPosition,
         y = yPosition,
+        stroke = "rgba(0,0,0,0)",
+        fill = "rgba(0,0,0,0)",
         angle = Math.PI,  // Start facing up
         step = 15,        // Default distance to move
         turn = 45,        // Default turning angle
@@ -93,38 +95,65 @@ module.exports = (function (){
         for(var i = 0; i < _final.length; i++) {
             var c = _final.charAt(i);
             console.log("processing " + c );
+
+            var arg = "";
+            sub = _final.substr(i);
+            match = /\((.*?)\)/g.exec(sub);
+
+            if(match && match.length > 1) {
+                arg = match[1];
+                if(sub.indexOf(arg) === 2) {
+                    i += arg.length + 2; // advance past the parameters
+                } else {
+                    arg = "";
+                }
+            }
+
             if(c === '-') {
                 // turn left by specified degrees (or default)
-                sub = _final.substr(i);
-                match = /\-\(([0-9]+)\)/.exec(sub);
-                if(match && match.length > 1) {
-                    angle -= parseFloat(match[1]) * (Math.PI / 180.0);
-                    console.log("-" + match[1]);
-                    i += match[1].length + 2; // advance past the parameters
-                } else {
-                    angle -= DEFAULT_TURN;
-                }
+                angle -= (arg.length === 0) ? DEFAULT_TURN : parseFloat(arg) * (Math.PI / 180.0);
             } else if(c === '+') {
                 // turn right by specified degrees (or default)
-                sub = _final.substr(i);
-                match = /\+\(([0-9]+)\)/.exec(sub);
-                if(match && match.length > 1) {
-                    angle += parseFloat(match[1]) * (Math.PI / 180.0);
-                    console.log("+" + match[1]);
-                    i += match[1].length + 2; // advance past the parameters
-                } else {
-                    angle += DEFAULT_TURN;
-                }
+                angle += (arg.length === 0) ? DEFAULT_TURN : parseFloat(arg) * (Math.PI / 180.0);
             } else if(c === '[') {
                 // save state
-                stack.push({x: x, y: y, angle: angle});
+                stack.push({x: x, y: y, angle: angle, stroke: stroke, fill: fill });
             } else if(c === ']') {
                 // restore state
+                context.strokeStyle = stroke;
+                context.fillStyle = fill;
+                context.closePath();
+                context.stroke();
+                context.fill();
+                context.beginPath();
                 var state = stack.pop();
                 x = state.x;
                 y = state.y;
                 angle = state.angle;
-                context.moveTo(x, y); // Move turtle back to saved position
+                stroke = state.stroke;
+                fill = state.fill;
+                context.moveTo(x, y);
+            } else if(c === '|') {
+                //change stroke color
+                context.strokeStyle = stroke;
+                context.fillStyle = fill;
+                context.closePath();
+                context.stroke();
+                context.fill();
+                context.beginPath();
+                context.moveTo(x, y);
+                stroke = arg;
+            } else if(c === '#') {
+                //change fill color
+                context.fillStyle = fill;
+                context.strokeStyle = stroke;
+                context.fillStyle = fill;
+                context.closePath();
+                context.stroke();
+                context.fill();
+                context.beginPath();
+                context.moveTo(x, y);
+                fill = arg;
             } else {
                 // move forward
                 x += DEFAULT_STEP * Math.sin(angle);
@@ -132,7 +161,11 @@ module.exports = (function (){
                 context.lineTo(x, y); // Draw line with turtle
             }
         }
+        context.strokeStyle = stroke;
+        context.fillStyle = fill;
+        context.closePath();
         context.stroke();
+        context.fill();
         context.restore();  // Restore contexts' graphical state
     }
 

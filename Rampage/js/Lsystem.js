@@ -142,6 +142,8 @@ module.exports = (function (){
                 context.fill();
                 context.beginPath();
                 context.moveTo(x, y);
+
+                if(arg === "none") arg = "rgba(0,0,0,0)";
                 stroke = arg;
             } else if(c === '#') {
                 //change fill color
@@ -153,6 +155,8 @@ module.exports = (function (){
                 context.fill();
                 context.beginPath();
                 context.moveTo(x, y);
+
+                if(arg === "none") arg = "rgba(0,0,0,0)";
                 fill = arg;
             } else {
                 // move forward

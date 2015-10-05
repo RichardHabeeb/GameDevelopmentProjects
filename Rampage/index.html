@@ -1,8 +1,57 @@
 <!doctype html>
 <html>
   <head>
+    <link href='https://fonts.googleapis.com/css?family=Roboto:400,900' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="build/bootstrap.min.css">
     <script src="build/bundle.js"></script>
+    <link rel="stylesheet" href="css/theme.css">
   </head>
   <body>
+    <div class="container">
+      <div class="jumbotron">
+        <h1>Buildarino</h1>
+        <p>Use LSystems to make buildings.</p>
+      </div>
+      <div class="row">
+        <div class="col-sm-2">
+          Rules:
+        </div>
+        <div class="col-sm-10">
+          <textarea class="form-control" style='min-height:100px;' id='rules' data-toggle="tooltip" data-placement="top" title="Write regex rules in JSON.">[["B","BB"],["A","B[-(45)A]+(45)A"]]</textarea>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-sm-2">
+          Axiom:
+        </div>
+        <div class="col-sm-4">
+          <input type="text" class="form-control" id='axiom' value="A" />
+        </div>
+        <div class="col-sm-2">
+          Iterations:
+        </div>
+        <div class="col-sm-4">
+          <input type="text" class="form-control" id='iterations' value="5" />
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-sm-2">
+          <button type="button" class="btn btn-default btn-lg" id="drawButton">Draw</button>
+        </div>
+        <div class="col-sm-10">
+          <div class="form-control" style='min-height:800px;' id="canvasContainer"></div>
+
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-sm-2">
+          SVG:
+        </div>
+        <div class="col-sm-10">
+          <textarea class="form-control" style='min-height:200px;' id='svgOutput'></textarea>
+        </div>
+      </div>
+
+    </div>
   </body>
 </html>

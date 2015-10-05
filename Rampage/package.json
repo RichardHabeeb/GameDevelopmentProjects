@@ -5,6 +5,9 @@
     "browserify": "11.x.x",
     "grunt": "0.4.x",
     "grunt-browserify": "4.x.x",
-    "grunt-contrib-watch": "0.6.x"
+    "grunt-contrib-watch": "0.6.x",
+    "grunt-contrib-copy": "0.8.x",
+    "jquery": "2.x.x",
+    "bootstrap": "3.x.x"
   }
 }

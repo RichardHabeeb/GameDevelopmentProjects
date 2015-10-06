@@ -17,12 +17,15 @@
           Rules:
         </div>
         <div class="col-sm-10">
-          <textarea class="form-control" style='min-height:100px;' id='rules' data-toggle="tooltip" data-placement="top" title="Write regex rules in JSON.">
+          <textarea wrap="soft" class="form-control" style='min-height:200px;' id='rules' data-toggle="tooltip" data-placement="top" title="Write regex rules as a JSON array of key-value arrays.">
 [
-["W","WW"],
-["R","RR"]
-]
-          </textarea>
+["w","wxw"],
+["r","rr"],
+["e","e"],
+["x","x"],
+["a","a[-(90)g]x[-(90)g]a"],
+["g","x|(#AAA)g|(none)g"]
+]</textarea>
         </div>
       </div>
       <div class="row">
@@ -30,13 +33,25 @@
           Axiom:
         </div>
         <div class="col-sm-7">
-          <input type="text" class="form-control" id='axiom' value="#(#eee)|(#333)W-(45)R-(90)R-(45)W" />
+          <textarea wrap="soft" class="form-control" style='min-height:200px;' id='axiom' data-toggle="tooltip" data-html="true" data-placement="top" title="
+            <strong><em>#(color):</em></strong> Fill following shape with a color.<br />
+            <strong><em>|(color):</em></strong> Draw following shape with these lines.<br />
+            <strong><em>+(degree):</em></strong> Rotate clockwise.<br />
+            <strong><em>+(degree):</em></strong> Rotate counter clockwise.<br />
+            <strong><em>[ ]:</em></strong> Save/Resore position, angle, and color state.<br />
+            <strong><em>A:</em></strong> Use other characters to move forward.<br />">
+|(none)#(none)
+[#(#EEE)|(#AAA)w-(45)e+(45)w-(45)e-(45)r-(45)e-(45)w+(45)e-(45)w]
+
+[w|(#AAA)[-(90)r]-(45)|(none)e|(#AAA)-(45)r]
+
+[a-(45)|(none)e+(45)a]</textarea>
         </div>
         <div class="col-sm-2">
           Iterations:
         </div>
         <div class="col-sm-1">
-          <input type="text" class="form-control" id='iterations' value="3" />
+          <input type="text" class="form-control" id='iterations' value="4" />
         </div>
       </div>
       <div class="row">
@@ -44,7 +59,7 @@
           <button type="button" class="btn btn-default btn-lg" id="drawButton">Draw</button>
         </div>
         <div class="col-sm-10">
-          <div class="form-control" style='min-height:800px;' id="canvasContainer"></div>
+          <div class="form-control" style='min-height:1000px;' id="canvasContainer"></div>
 
         </div>
       </div>

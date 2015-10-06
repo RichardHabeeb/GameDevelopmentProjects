@@ -20,10 +20,11 @@ window.onload = function() {
     var context = canvas.getContext('2d');
 
     $("#drawButton").click(function() {
-        lSystem.lsystem($("#axiom").val(), JSON.parse($("#rules").val()), Number($("#iterations").val()));
+        lSystem.lsystem($("#axiom").val().replace(/\s/g, ""), JSON.parse($("#rules").val()), Number($("#iterations").val()));
         var canvasHeight =  Math.floor($(canvas).height());
         var canvasWidth = Math.floor($(canvas).width());
         context.clearRect(0,0, canvasWidth, canvasHeight);
-        lSystem.render(Math.floor(canvasWidth / 2), canvasHeight - 1, context);
+        lSystem.render(Math.floor(canvasWidth / 2), canvasHeight - 5, context);
+        $("#svgOutput").val(lSystem.SVG());
     });
 };

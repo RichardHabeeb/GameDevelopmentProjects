@@ -2,7 +2,8 @@
 module.exports = (function (){
     var _final = "",
     DEFAULT_STEP = 15,
-    DEFAULT_TURN = Math.PI / 4;
+    DEFAULT_TURN = Math.PI / 4,
+    _svgDom = null;
 
     /* Initializes an L-System using the supplied
     * axiom, rules, and number of iterations
@@ -89,9 +90,32 @@ module.exports = (function (){
         rads = 0,
         match;
 
+        _svgDom = $("<g></g>");
+        currentPath = $("<path d='' />");
+
+        var resetPath = function () {
+
+            context.strokeStyle = stroke;
+            context.fillStyle = fill;
+            if(fill !== "rgba(0,0,0,0)") {
+                context.closePath();
+                currentPath.attr("d", currentPath.attr("d") + " Z");
+            }
+            currentPath.attr("stroke", stroke);
+            currentPath.attr("fill", fill);
+            context.stroke();
+            context.fill();
+            context.beginPath();
+            currentPath = $(document.createElement("path"));
+            $(_svgDom).append(currentPath);
+            currentPath.attr("d", "M" + Math.floor(x) + " " + Math.floor(y));
+        };
+
         context.save();       // Save any rendering state from calling context
+        context.lineWidth = 3;
         context.beginPath();
         context.moveTo(x, y); // Move turtle to starting position
+
         for(var i = 0; i < _final.length; i++) {
             var c = _final.charAt(i);
             console.log("processing " + c );
@@ -120,93 +144,53 @@ module.exports = (function (){
                 stack.push({x: x, y: y, angle: angle, stroke: stroke, fill: fill });
             } else if(c === ']') {
                 // restore state
-                context.strokeStyle = stroke;
-                context.fillStyle = fill;
-                context.closePath();
-                context.stroke();
-                context.fill();
-                context.beginPath();
+                resetPath();
                 var state = stack.pop();
                 x = state.x;
                 y = state.y;
                 angle = state.angle;
                 stroke = state.stroke;
                 fill = state.fill;
+
                 context.moveTo(x, y);
+                currentPath.attr({
+                    "d": "M" + Math.floor(x) + " " + Math.floor(y)
+                });
             } else if(c === '|') {
                 //change stroke color
-                context.strokeStyle = stroke;
-                context.fillStyle = fill;
-                context.closePath();
-                context.stroke();
-                context.fill();
-                context.beginPath();
+                resetPath();
                 context.moveTo(x, y);
-
                 if(arg === "none") arg = "rgba(0,0,0,0)";
                 stroke = arg;
             } else if(c === '#') {
                 //change fill color
-                context.fillStyle = fill;
-                context.strokeStyle = stroke;
-                context.fillStyle = fill;
-                context.closePath();
-                context.stroke();
-                context.fill();
-                context.beginPath();
+                resetPath();
                 context.moveTo(x, y);
-
                 if(arg === "none") arg = "rgba(0,0,0,0)";
                 fill = arg;
             } else {
                 // move forward
                 x += DEFAULT_STEP * Math.sin(angle);
                 y += DEFAULT_STEP * Math.cos(angle);
+                currentPath.attr({
+                    "d": currentPath.attr("d") + " L" + Math.round(x) + " " + Math.round(y)
+                });
                 context.lineTo(x, y); // Draw line with turtle
             }
         }
-        context.strokeStyle = stroke;
-        context.fillStyle = fill;
-        context.closePath();
-        context.stroke();
-        context.fill();
+        resetPath();
         context.restore();  // Restore contexts' graphical state
     }
 
-    /* Creates Lindenmayer's algae growth pattern
-    * params:
-    * - iterations: the number of iterations to perform
-    *   in generating the algae growth.
-    */
-    function algae(iterations) {
-        return lsystem("A", [["A","AB"],["B","A"]], iterations);
-    }
-
-    /* Creates the classic Pythagoras Tree
-    * params:
-    * - iterations: the number of iterations to perform
-    *   in generating the tree.
-    */
-    function pythagorasTree(iterations) {
-        return lsystem("A", [["B","BB"],["A","B[-(45)A]+(45)A"]], iterations);
-    }
-
-    /* Creates a version of the Koch curve
-    * params:
-    * - iterations: the number of iterations to perform
-    *   in generating the Koch curve.
-    */
-    function kochCurve(iterations) {
-        return lsystem("-(90)F", [["F","F+(90)F-(90)F-(90)F+(90)F"]], iterations);
+    function SVG() {
+        return _svgDom.html();
     }
 
     // The public API for the L-System module
     return {
         lsystem: lsystem,
         render: render,
-        algae: algae,
-        pythagorasTree: pythagorasTree,
-        kochCurve: kochCurve
+        SVG: SVG,
     };
 
 })();

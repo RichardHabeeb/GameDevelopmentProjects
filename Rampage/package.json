@@ -1,0 +1,17 @@
+{
+  "name": "SaVaGe",
+  "version": "0.0.1",
+  "description": "Fully Javascript SVG based game engine.",
+  "author": "Richard Habeeb <richard.habeeb@gmail.com>",
+  "main": "server/App.js",
+  "dependencies": {
+    "browserify": "11.x.x",
+    "grunt": "0.4.x",
+    "grunt-browserify": "4.x.x",
+    "grunt-contrib-watch": "0.6.x",
+    "grunt-contrib-uglify": "0.9.x",
+    "jquery": "2.x.x",
+    "websocket": "1.x.x",
+    "express": "4.x.x"
+  }
+}

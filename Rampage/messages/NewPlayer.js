@@ -5,6 +5,7 @@ module.exports = (function (){
         NewPlayer.x = 0;
         NewPlayer.y = 0;
         NewPlayer.id = 0;
+        NewPlayer.color = "#000";
 
         return NewPlayer;
     };

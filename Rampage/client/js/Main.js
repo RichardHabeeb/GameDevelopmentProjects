@@ -2,7 +2,7 @@ window.jQuery = $ = require('jquery');
 var Game = require("./Game.js");
 var Settings = require("./Settings.js");
 var Server = require("./Server.js");
-var NewPlayer = require("../../messages/NewPlayer.js");
+var Message = require("../../messages/Message.js");
 
 window.onload = function() {
     var previousTimeStamp = null;
@@ -20,8 +20,10 @@ window.onload = function() {
     };
 
     server = new Server(Settings.serverUri, function () {
-        server.send(new NewPlayer());
+        server.send(Message("NewPlayer"));
+
         window.requestAnimationFrame(loop);
     });
+    game.setServer(server);
 
 };

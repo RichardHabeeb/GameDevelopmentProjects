@@ -1,14 +1,63 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 module.exports = (function (){
-    window.jQuery = $ = require('jquery');
+    var Rect = require("./Rect.js");
+    var Vector = require("./Vector.js");
     var Settings = require("./Settings.js");
 
+    var Entity = function(id) {
+        this._velocity = new Vector(0, 0);
+
+        this.svg = $(document.createElementNS(Settings.svgUri, "rect"));
+        this.svg.attr({
+            id: id,
+            width: Settings.player.width,
+            height: Settings.player.height
+        });
+
+    };
+
+    Entity.prototype.setPosition = function(vector) {
+        this.svg.attr({
+            x: vector.x,
+            y: vector.y
+        });
+    };
+
+    Entity.prototype.attachTo = function (parent) {
+        parent.append(this.svg);
+    };
+
+    Entity.prototype.setColor = function (color) {
+        this.svg.attr("fill", color);
+    };
+
+    return Entity;
+})();
+
+},{"./Rect.js":5,"./Settings.js":7,"./Vector.js":8}],2:[function(require,module,exports){
+module.exports = (function (){
+    window.jQuery = $ = require('jquery');
+    var Settings = require("./Settings.js");
+    var Entity = require("./Entity.js");
+    var Vector = require("./Vector.js");
+
     var Game = function(parentElement) {
-        svgWindow = $("<svg></svg>");
-        parentElement.append(svgWindow);
-        svgWindow.attr({
+        this.svgWindow = $(document.createElementNS(Settings.svgUri, "svg"));
+        parentElement.append(this.svgWindow);
+        this.svgWindow.attr({
             width: Settings.window.width,
             height: Settings.window.height
+        });
+    };
+
+    Game.prototype.setServer = function(server) {
+        var svgWindow = this.svgWindow;
+        server.addMessageHandler("NewPlayer", function (message) {
+            console.log("Recieved New Player.");
+            var newPlayer = new Entity(message.id);
+            newPlayer.setPosition(new Vector(message.x, message.y));
+            newPlayer.setColor(message.color);
+            newPlayer.attachTo(svgWindow); //TODO layers
         });
     };
 
@@ -24,12 +73,73 @@ module.exports = (function (){
     return Game;
 })();
 
-},{"./Settings.js":4,"jquery":6}],2:[function(require,module,exports){
+},{"./Entity.js":1,"./Settings.js":7,"./Vector.js":8,"jquery":12}],3:[function(require,module,exports){
+module.exports = (function (){
+    return function(keyCodes) {
+        var that = {};
+
+        that.keyPressed = [];
+        for(var i = 0; i < 250; i++) that.keyPressed[i] = false;
+
+        var defaultPreventers = [];
+        that.preventDefault = function(key, state) {
+            if(typeof(state) === "undefined") state = true;
+            defaultPreventers[key] = state;
+        };
+
+        var keyDownEvents = [];
+        that.addDownEvent = function(key, event) {
+            keyDownEvents[key] = event;
+        };
+
+        that.removeDownEvent = function(key) {
+            keyDownEvents[key] = undefined;
+        };
+
+        var keyUpEvents = [];
+        that.addUpEvent = function(key, event) {
+            keyUpEvents[key] = event;
+        };
+
+        that.removeUpEvent = function(key) {
+            keyUpEvents[key] = undefined;
+        };
+
+
+        function keyDownListener(e) {
+            var key = e.which || e.keyCode;
+            if(typeof(keyDownEvents[key]) !== "undefined") keyDownEvents[key]();
+            if(typeof(defaultPreventers[key]) !== "undefined" && defaultPreventers[key]) e.preventDefault();
+            that.keyPressed[key] = true;
+        }
+
+        function keyUpListener(e) {
+            var key = e.which || e.keyCode;
+            if(typeof(keyUpEvents[key]) !== "undefined") keyUpEvents[key]();
+            if(typeof(defaultPreventers[key]) !== "undefined" && defaultPreventers[key]) e.preventDefault();
+            that.keyPressed[key] = false;
+        }
+
+        that.startListener = function() {
+            window.onkeydown = keyDownListener;
+            window.onkeyup = keyUpListener;
+        };
+
+        that.stopListener = function() {
+            window.onkeydown = function() {};
+            window.onkeyup = function() {};
+        };
+
+        return that;
+    };
+})();
+
+},{}],4:[function(require,module,exports){
 window.jQuery = $ = require('jquery');
 var Game = require("./Game.js");
 var Settings = require("./Settings.js");
 var Server = require("./Server.js");
-var NewPlayer = require("../../messages/NewPlayer.js");
+var Message = require("../../messages/Message.js");
 
 window.onload = function() {
     var previousTimeStamp = null;
@@ -47,18 +157,101 @@ window.onload = function() {
     };
 
     server = new Server(Settings.serverUri, function () {
-        server.send(new NewPlayer());
+        server.send(Message("NewPlayer"));
+
         window.requestAnimationFrame(loop);
     });
+    game.setServer(server);
 
 };
 
-},{"../../messages/NewPlayer.js":5,"./Game.js":1,"./Server.js":3,"./Settings.js":4,"jquery":6}],3:[function(require,module,exports){
+},{"../../messages/Message.js":9,"./Game.js":2,"./Server.js":6,"./Settings.js":7,"jquery":12}],5:[function(require,module,exports){
+module.exports = (function (){
+    var Vector = require("./Vector.js");
+    return function (setX, setY, setWidth, setHeight) {
+        var that = {};
+        if (typeof setX === 'undefined') {
+            setX = 0;
+        }
+
+        if (typeof setY === 'undefined') {
+            setY = 0;
+        }
+
+        if (typeof setWidth === 'undefined') {
+            setWidth = 0;
+        }
+
+        if (typeof setHeight === 'undefined') {
+            setHeight = 0;
+        }
+
+
+        that.buildFromVectors = function(topLeftPos, size) {
+            that.x = topLeftPos.x;
+            that.y = topLeftPos.y;
+            that.width = size.x;
+            that.height = size.y;
+            return that;
+        };
+
+        that.overlappingWithRectangle = function(other) {
+            // return !(
+            //     that.x > (other.x + other.width) || other.x > (that.x + that.width) || // If one rectangle is on left side of other
+            //     that.y < (other.y + other.height) || other.y < (that.y + that.height)); // If one rectangle is above other
+            // If one rectangle is on left side of other
+             if (that.x >= (other.x + other.width) || other.x >= (that.x + that.width))
+                 return false;
+
+             // If one rectangle is above other
+             if (that.y >= (other.y + other.height) || other.y >= (that.y + that.height))
+                 return false;
+
+             return true;
+        };
+
+        that.getOverlapOffset = function(other) {
+            var ret = Vector();
+            if(that.overlappingWithRectangle(other)) {
+                var distLeft = other.x - (that.x + that.width);
+                var distRight = (other.x + other.width) - that.x;
+                var distTop = other.y - (that.y + that.height);
+                var distBottom = (other.y + other.height) - that.y;
+                var smallestMag = Math.min(Math.abs(distLeft), Math.abs(distRight), Math.abs(distTop), Math.abs(distBottom));
+                if(Math.abs(distLeft) === smallestMag) {
+                    ret.x = distLeft;
+                }
+                if(Math.abs(distRight) === smallestMag) {
+                    ret.x = distRight;
+                }
+                if(Math.abs(distTop) === smallestMag) {
+                    ret.y = distTop;
+                }
+                if(Math.abs(distBottom) === smallestMag) {
+                    ret.y = distBottom;
+                }
+            }
+            return ret;
+        };
+
+        that.x = setX;
+        that.y = setY;
+        that.width = setWidth;
+        that.height = setHeight;
+
+
+        return that;
+    };
+})();
+
+},{"./Vector.js":8}],6:[function(require,module,exports){
 module.exports = (function (){
     window.jQuery = $ = require('jquery');
 
     var Server = function(uri, connectedCallback) {
         this._websocket = new WebSocket(uri, 'echo-protocol');
+        /* closure reference is to fix the javascript "this" in callbacks */
+        var eventHandlers = this._eventHandlers = {};
 
         this._websocket.onopen = function(evt) {
             console.log("Connected to " + uri);
@@ -70,7 +263,14 @@ module.exports = (function (){
         };
 
         this._websocket.onmessage = function(evt) {
-            console.log(JSON.parse(evt.data));
+            var message = JSON.parse(evt.data);
+            if(typeof message.id !== "undefined" && message.id in eventHandlers) {
+                for(var i = 0; i < eventHandlers[message.id].length; i++) {
+                    eventHandlers[message.id][i](message.data);
+                }
+            } else {
+                console.log("Dropped message: ", message);
+            }
         };
 
         this._websocket.onerror = function(evt) {
@@ -86,21 +286,83 @@ module.exports = (function (){
         }
     };
 
+    Server.prototype.addMessageHandler = function(messageId, handler) {
+        if(!(messageId in this._eventHandlers)) {
+            this._eventHandlers[messageId] = [];
+        }
+        this._eventHandlers[messageId].push(handler);
+    };
+
+    Server.prototype.removeMessageHandler = function(messageId, handler) {
+        if(messageId in this._eventHandlers) {
+            var handlerIndex = this._eventHandlers[messageId].indexOf(handler);
+            if(handlerIndex > -1) {
+                this._eventHandlers[messageId].splice(handlerIndex, 1);
+            }
+        }
+    };
+
     return Server;
 })();
 
-},{"jquery":6}],4:[function(require,module,exports){
+},{"jquery":12}],7:[function(require,module,exports){
 module.exports = (function (){
     return {
         window: {
             width: 1000,
             height: 700,
         },
-        serverUri: "ws://localhost/"
+        player: {
+            width: 50,
+            height: 100
+        },
+        serverUri: "ws://localhost/",
+        svgUri: "http://www.w3.org/2000/svg"
     };
 })();
 
-},{}],5:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
+module.exports = (function (){
+    return function (setX, setY) {
+        var that = {};
+        if (typeof setX === 'undefined') {
+            setX = 0;
+        }
+
+        if (typeof setY === 'undefined') {
+            setY = 0;
+        }
+
+        that.x = setX;
+        that.y = setY;
+
+        return that;
+    };
+})();
+
+},{}],9:[function(require,module,exports){
+module.exports = (function (){
+    var MessageList = require("./MessageList.js");
+    
+    return function(id) {
+        var Message = {};
+        Message.id = id;
+        Message.data = MessageList[id]();
+
+        return Message;
+    };
+})();
+
+},{"./MessageList.js":10}],10:[function(require,module,exports){
+module.exports = (function (){
+    var NewPlayer = require("./NewPlayer.js");
+
+    return {
+        "NewPlayer": NewPlayer
+    };
+})();
+
+},{"./NewPlayer.js":11}],11:[function(require,module,exports){
 module.exports = (function (){
     return function() {
         var NewPlayer = {};
@@ -108,12 +370,13 @@ module.exports = (function (){
         NewPlayer.x = 0;
         NewPlayer.y = 0;
         NewPlayer.id = 0;
+        NewPlayer.color = "#000";
 
         return NewPlayer;
     };
 })();
 
-},{}],6:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 /*!
  * jQuery JavaScript Library v2.1.4
  * http://jquery.com/
@@ -9325,4 +9588,4 @@ return jQuery;
 
 }));
 
-},{}]},{},[1,2,3,4,5]);
+},{}]},{},[1,2,3,4,5,6,7,8,9,10,11]);

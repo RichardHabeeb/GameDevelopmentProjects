@@ -5,8 +5,10 @@ module.exports = (function (){
     var Settings = require("./Settings.js");
 
     var Entity = function(id) {
-        this._velocity = new Vector(0, 0);
-
+        this.velocity = new Vector();
+        this.appliedForce = new Vector();
+        this.mass = Settings.player.mass;
+        this.onFloor = true;
         this.svg = $(document.createElementNS(Settings.svgUri, "rect"));
         this.svg.attr({
             id: id,
@@ -23,12 +25,31 @@ module.exports = (function (){
         });
     };
 
+    Entity.prototype.getPosition = function() {
+        return new Vector(Number(this.svg.attr("x")), Number(this.svg.attr("y")));
+    };
+
     Entity.prototype.attachTo = function (parent) {
         parent.append(this.svg);
     };
 
     Entity.prototype.setColor = function (color) {
         this.svg.attr("fill", color);
+    };
+
+    Entity.prototype.update = function(elapsedTimeSeconds) {
+        var acceleration = Vector(this.mass * this.appliedForce.x, this.mass * this.appliedForce.y);
+        if(!this.onFloor) {
+            acceleration.y += this.mass * Settings.gravity.y;
+        }
+        var frictionForceMag = Settings.gravity.y * Settings.frictionCoef;
+        if(this.velocity.x > 0) acceleration.x -= frictionForceMag * this.mass;
+        if(this.velocity.x < 0) acceleration.x += frictionForceMag * this.mass;
+        this.velocity.x = Math.max(-Settings.player.topSpeed, Math.min(Settings.player.topSpeed, this.velocity.x + acceleration.x * elapsedTimeSeconds));
+        this.velocity.y = this.velocity.y + acceleration.y * elapsedTimeSeconds;
+        if(Math.abs(velocity.x) < stoppedSpeed) velocity.x = 0;
+        var position = this.getPosition();
+        this.setPosition(position.x + velocity.x * elapsedTimeSeconds, position.y + velocity.y * elapsedTimeSeconds);
     };
 
     return Entity;
@@ -40,6 +61,16 @@ module.exports = (function (){
     var Settings = require("./Settings.js");
     var Entity = require("./Entity.js");
     var Vector = require("./Vector.js");
+    var Keyboard = require("./Keyboard.js");
+    var keyCodes = {
+        up: 38,
+        down: 40,
+        left: 37,
+        right: 39,
+        space: 32,
+        z: 90,
+        x: 88,
+    };
 
     var Game = function(parentElement) {
         this.svgWindow = $(document.createElementNS(Settings.svgUri, "svg"));
@@ -48,10 +79,15 @@ module.exports = (function (){
             width: Settings.window.width,
             height: Settings.window.height
         });
+
+        this.keys = new Keyboard();
+        this.player = null;
+        this.entities = [];
     };
 
     Game.prototype.setServer = function(server) {
         var svgWindow = this.svgWindow;
+
         server.addMessageHandler("NewPlayer", function (message) {
             console.log("Recieved New Player.");
             var newPlayer = new Entity(message.id);
@@ -63,7 +99,15 @@ module.exports = (function (){
 
 
     Game.prototype.update = function() {
+        if(this.player !== null) {
+            this.player.appliedForce.x = 0;
+            if(this.keys.keyPressed[keyCodes.left]) this.player.appliedForce.x -= Settings.player.movementForce;
+            if(this.keyPressed[keyCodes.right]) this.player.appliedForce.x += Settings.player.movementForce;
+        }
 
+        for(var i = 0; i < this.entities.lenth; i++) {
+            this.entities[i].update();
+        }
     };
 
     Game.prototype.render = function() {
@@ -73,9 +117,9 @@ module.exports = (function (){
     return Game;
 })();
 
-},{"./Entity.js":1,"./Settings.js":7,"./Vector.js":8,"jquery":12}],3:[function(require,module,exports){
-module.exports = (function (){
-    return function(keyCodes) {
+},{"./Entity.js":1,"./Keyboard.js":3,"./Settings.js":7,"./Vector.js":8,"jquery":12}],3:[function(require,module,exports){
+module.exports = (function (){ //TODO make this a singleton
+    return function() {
         var that = {};
 
         that.keyPressed = [];
@@ -307,6 +351,8 @@ module.exports = (function (){
 
 },{"jquery":12}],7:[function(require,module,exports){
 module.exports = (function (){
+    var Vector = require("./Vector.js");
+
     return {
         window: {
             width: 1000,
@@ -314,14 +360,19 @@ module.exports = (function (){
         },
         player: {
             width: 50,
-            height: 100
+            height: 100,
+            mass: 50,
+            topSpeed: 150,
+            movementForce: 1000,
         },
+        gravity: Vector(0, 9.8),
+        frictionCoef: 0.99,
         serverUri: "ws://localhost/",
         svgUri: "http://www.w3.org/2000/svg"
     };
 })();
 
-},{}],8:[function(require,module,exports){
+},{"./Vector.js":8}],8:[function(require,module,exports){
 module.exports = (function (){
     return function (setX, setY) {
         var that = {};

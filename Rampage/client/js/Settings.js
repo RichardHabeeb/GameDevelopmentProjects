@@ -1,4 +1,6 @@
 module.exports = (function (){
+    var Vector = require("./Vector.js");
+
     return {
         window: {
             width: 1000,
@@ -6,8 +8,13 @@ module.exports = (function (){
         },
         player: {
             width: 50,
-            height: 100
+            height: 100,
+            mass: 50,
+            topSpeed: 150,
+            movementForce: 1000,
         },
+        gravity: Vector(0, 9.8),
+        frictionCoef: 0.99,
         serverUri: "ws://localhost/",
         svgUri: "http://www.w3.org/2000/svg"
     };

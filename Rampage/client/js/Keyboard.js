@@ -1,5 +1,5 @@
-module.exports = (function (){
-    return function(keyCodes) {
+module.exports = (function (){ //TODO make this a singleton
+    return function() {
         var that = {};
 
         that.keyPressed = [];

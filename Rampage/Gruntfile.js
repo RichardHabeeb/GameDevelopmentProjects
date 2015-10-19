@@ -4,7 +4,7 @@ module.exports = function(grunt) {
         browserify: {
             dist: {
                 files: {
-                    'client/public/bundle.js': ['client/js/*.js', 'messages/*.js'],
+                    'client/public/bundle.js': ['client/js/*.js', 'messages/*.js', 'common/*.js'],
                 }
             }
         },
@@ -16,7 +16,7 @@ module.exports = function(grunt) {
             }
         },
         watch: {
-            files: ['client/js/*.js', 'messages/*.js'],
+            files: ['client/js/*.js', 'messages/*.js', 'common/*.js'],
             tasks: ['browserify']
         }
     });

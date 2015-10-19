@@ -1,7 +1,7 @@
 window.jQuery = $ = require('jquery');
 var Game = require("./Game.js");
-var Settings = require("./Settings.js");
 var Server = require("./Server.js");
+var Settings = require("../../common/Settings.js");
 var Message = require("../../messages/Message.js");
 
 window.onload = function() {
@@ -20,8 +20,6 @@ window.onload = function() {
     };
 
     server = new Server(Settings.serverUri, function () {
-        server.send(Message("NewPlayer"));
-
         window.requestAnimationFrame(loop);
     });
     game.setServer(server);

@@ -1,8 +1,8 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 module.exports = (function (){
-    var Rect = require("./Rect.js");
-    var Vector = require("./Vector.js");
-    var Settings = require("./Settings.js");
+    var Rect = require("../../common/Rect.js");
+    var Vector = require("../../common/Vector.js");
+    var Settings = require("../../common/Settings.js");
 
     var Entity = function(id) {
         this.velocity = new Vector();
@@ -47,20 +47,20 @@ module.exports = (function (){
         if(this.velocity.x < 0) acceleration.x += frictionForceMag * this.mass;
         this.velocity.x = Math.max(-Settings.player.topSpeed, Math.min(Settings.player.topSpeed, this.velocity.x + acceleration.x * elapsedTimeSeconds));
         this.velocity.y = this.velocity.y + acceleration.y * elapsedTimeSeconds;
-        if(Math.abs(velocity.x) < stoppedSpeed) velocity.x = 0;
+        if(Math.abs(this.velocity.x) < Settings.player.stoppedSpeed) this.velocity.x = 0;
         var position = this.getPosition();
-        this.setPosition(position.x + velocity.x * elapsedTimeSeconds, position.y + velocity.y * elapsedTimeSeconds);
+        this.setPosition(Vector(position.x + this.velocity.x * elapsedTimeSeconds, position.y + this.velocity.y * elapsedTimeSeconds));
     };
 
     return Entity;
 })();
 
-},{"./Rect.js":5,"./Settings.js":7,"./Vector.js":8}],2:[function(require,module,exports){
+},{"../../common/Rect.js":6,"../../common/Settings.js":7,"../../common/Vector.js":8}],2:[function(require,module,exports){
 module.exports = (function (){
     window.jQuery = $ = require('jquery');
-    var Settings = require("./Settings.js");
+    var Settings = require("../../common/Settings.js");
     var Entity = require("./Entity.js");
-    var Vector = require("./Vector.js");
+    var Vector = require("../../common/Vector.js");
     var Keyboard = require("./Keyboard.js");
     var keyCodes = {
         up: 38,
@@ -81,32 +81,48 @@ module.exports = (function (){
         });
 
         this.keys = new Keyboard();
-        this.player = null;
-        this.entities = [];
+        this.keys.startListener();
+        this.player = { id: null }; /* this is so we can pass a reference */
+        this.entities = {};
     };
 
     Game.prototype.setServer = function(server) {
         var svgWindow = this.svgWindow;
+        var entities = this.entities;
+        var player = this.player;
 
-        server.addMessageHandler("NewPlayer", function (message) {
-            console.log("Recieved New Player.");
-            var newPlayer = new Entity(message.id);
-            newPlayer.setPosition(new Vector(message.x, message.y));
-            newPlayer.setColor(message.color);
-            newPlayer.attachTo(svgWindow); //TODO layers
+        server.addMessageHandler("UpdatePlayer", function (message) {
+            if(message.id in entities) {
+                entities[message.id].setPosition(new Vector(message.x, message.y));
+            } else {
+                console.log("Recieved New Player.");
+                var newPlayer = new Entity(message.id);
+                newPlayer.setPosition(new Vector(message.x, message.y));
+                newPlayer.setColor(message.color);
+                newPlayer.attachTo(svgWindow); //TODO layers
+                entities[message.id] = newPlayer;
+            }
+        });
+
+        server.addMessageHandler("InformId", function (message) {
+            player.id = message.id;
+
         });
     };
 
 
-    Game.prototype.update = function() {
-        if(this.player !== null) {
-            this.player.appliedForce.x = 0;
-            if(this.keys.keyPressed[keyCodes.left]) this.player.appliedForce.x -= Settings.player.movementForce;
-            if(this.keyPressed[keyCodes.right]) this.player.appliedForce.x += Settings.player.movementForce;
+    Game.prototype.update = function(elapsedTimeSeconds) {
+        if(this.player.id !== null && typeof this.entities[this.player.id] !== "undefined") {
+            var player = this.entities[this.player.id];
+            player.appliedForce.x = 0;
+            if(this.keys.keyPressed[keyCodes.left]) player.appliedForce.x -= Settings.player.movementForce;
+            if(this.keys.keyPressed[keyCodes.right]) player.appliedForce.x += Settings.player.movementForce;
         }
 
-        for(var i = 0; i < this.entities.lenth; i++) {
-            this.entities[i].update();
+        for (var id in this.entities) {
+            if (this.entities.hasOwnProperty(id)) {
+                this.entities[id].update(elapsedTimeSeconds);
+            }
         }
     };
 
@@ -117,7 +133,7 @@ module.exports = (function (){
     return Game;
 })();
 
-},{"./Entity.js":1,"./Keyboard.js":3,"./Settings.js":7,"./Vector.js":8,"jquery":12}],3:[function(require,module,exports){
+},{"../../common/Settings.js":7,"../../common/Vector.js":8,"./Entity.js":1,"./Keyboard.js":3,"jquery":14}],3:[function(require,module,exports){
 module.exports = (function (){ //TODO make this a singleton
     return function() {
         var that = {};
@@ -181,8 +197,8 @@ module.exports = (function (){ //TODO make this a singleton
 },{}],4:[function(require,module,exports){
 window.jQuery = $ = require('jquery');
 var Game = require("./Game.js");
-var Settings = require("./Settings.js");
 var Server = require("./Server.js");
+var Settings = require("../../common/Settings.js");
 var Message = require("../../messages/Message.js");
 
 window.onload = function() {
@@ -201,15 +217,74 @@ window.onload = function() {
     };
 
     server = new Server(Settings.serverUri, function () {
-        server.send(Message("NewPlayer"));
-
         window.requestAnimationFrame(loop);
     });
     game.setServer(server);
 
 };
 
-},{"../../messages/Message.js":9,"./Game.js":2,"./Server.js":6,"./Settings.js":7,"jquery":12}],5:[function(require,module,exports){
+},{"../../common/Settings.js":7,"../../messages/Message.js":11,"./Game.js":2,"./Server.js":5,"jquery":14}],5:[function(require,module,exports){
+module.exports = (function (){
+    window.jQuery = $ = require('jquery');
+
+    var Server = function(uri, connectedCallback) {
+        this._websocket = new WebSocket(uri, 'echo-protocol');
+        /* closure reference is to fix the javascript "this" in callbacks */
+        var eventHandlers = this._eventHandlers = {};
+
+        this._websocket.onopen = function(evt) {
+            console.log("Connected to " + uri);
+            connectedCallback();
+        };
+
+        this._websocket.onclose = function(evt) {
+            console.log("Disconnected.");
+        };
+
+        this._websocket.onmessage = function(evt) {
+            var message = JSON.parse(evt.data);
+            if(typeof message.id !== "undefined" && message.id in eventHandlers) {
+                for(var i = 0; i < eventHandlers[message.id].length; i++) {
+                    eventHandlers[message.id][i](message.data);
+                }
+            } else {
+                console.log("Dropped message: ", message);
+            }
+        };
+
+        this._websocket.onerror = function(evt) {
+            console.log(evt);
+        };
+    };
+
+    Server.prototype.send = function(m) {
+        if(this._websocket.readyState === 1) {
+            this._websocket.send(JSON.stringify(m));
+        } else {
+            console.log("Websocket not connected: ", this._websocket.readyState);
+        }
+    };
+
+    Server.prototype.addMessageHandler = function(messageId, handler) {
+        if(!(messageId in this._eventHandlers)) {
+            this._eventHandlers[messageId] = [];
+        }
+        this._eventHandlers[messageId].push(handler);
+    };
+
+    Server.prototype.removeMessageHandler = function(messageId, handler) {
+        if(messageId in this._eventHandlers) {
+            var handlerIndex = this._eventHandlers[messageId].indexOf(handler);
+            if(handlerIndex > -1) {
+                this._eventHandlers[messageId].splice(handlerIndex, 1);
+            }
+        }
+    };
+
+    return Server;
+})();
+
+},{"jquery":14}],6:[function(require,module,exports){
 module.exports = (function (){
     var Vector = require("./Vector.js");
     return function (setX, setY, setWidth, setHeight) {
@@ -288,68 +363,7 @@ module.exports = (function (){
     };
 })();
 
-},{"./Vector.js":8}],6:[function(require,module,exports){
-module.exports = (function (){
-    window.jQuery = $ = require('jquery');
-
-    var Server = function(uri, connectedCallback) {
-        this._websocket = new WebSocket(uri, 'echo-protocol');
-        /* closure reference is to fix the javascript "this" in callbacks */
-        var eventHandlers = this._eventHandlers = {};
-
-        this._websocket.onopen = function(evt) {
-            console.log("Connected to " + uri);
-            connectedCallback();
-        };
-
-        this._websocket.onclose = function(evt) {
-            console.log("Disconnected.");
-        };
-
-        this._websocket.onmessage = function(evt) {
-            var message = JSON.parse(evt.data);
-            if(typeof message.id !== "undefined" && message.id in eventHandlers) {
-                for(var i = 0; i < eventHandlers[message.id].length; i++) {
-                    eventHandlers[message.id][i](message.data);
-                }
-            } else {
-                console.log("Dropped message: ", message);
-            }
-        };
-
-        this._websocket.onerror = function(evt) {
-            console.log(evt);
-        };
-    };
-
-    Server.prototype.send = function(m) {
-        if(this._websocket.readyState === 1) {
-            this._websocket.send(JSON.stringify(m));
-        } else {
-            console.log("Websocket not connected: ", this._websocket.readyState);
-        }
-    };
-
-    Server.prototype.addMessageHandler = function(messageId, handler) {
-        if(!(messageId in this._eventHandlers)) {
-            this._eventHandlers[messageId] = [];
-        }
-        this._eventHandlers[messageId].push(handler);
-    };
-
-    Server.prototype.removeMessageHandler = function(messageId, handler) {
-        if(messageId in this._eventHandlers) {
-            var handlerIndex = this._eventHandlers[messageId].indexOf(handler);
-            if(handlerIndex > -1) {
-                this._eventHandlers[messageId].splice(handlerIndex, 1);
-            }
-        }
-    };
-
-    return Server;
-})();
-
-},{"jquery":12}],7:[function(require,module,exports){
+},{"./Vector.js":8}],7:[function(require,module,exports){
 module.exports = (function (){
     var Vector = require("./Vector.js");
 
@@ -363,6 +377,7 @@ module.exports = (function (){
             height: 100,
             mass: 50,
             topSpeed: 150,
+            stoppedSpeed: 5.0,
             movementForce: 1000,
         },
         gravity: Vector(0, 9.8),
@@ -393,6 +408,29 @@ module.exports = (function (){
 
 },{}],9:[function(require,module,exports){
 module.exports = (function (){
+    return function() {
+        var InformId = {};
+
+        InformId.id = 0;
+
+        return InformId;
+    };
+})();
+
+},{}],10:[function(require,module,exports){
+module.exports = (function (){
+    return function() {
+        var InformMap = {};
+
+        InformMap.background = "<g></g>";
+        InformMap.foreground = "<g></g>";
+
+        return InformMap;
+    };
+})();
+
+},{}],11:[function(require,module,exports){
+module.exports = (function (){
     var MessageList = require("./MessageList.js");
     
     return function(id) {
@@ -404,30 +442,36 @@ module.exports = (function (){
     };
 })();
 
-},{"./MessageList.js":10}],10:[function(require,module,exports){
+},{"./MessageList.js":12}],12:[function(require,module,exports){
 module.exports = (function (){
-    var NewPlayer = require("./NewPlayer.js");
+    var UpdatePlayer = require("./UpdatePlayer.js");
+    var InformId = require("./InformId.js");
+    var InformMap = require("./InformMap.js");
 
     return {
-        "NewPlayer": NewPlayer
+        "UpdatePlayer": UpdatePlayer,
+        "InformId": InformId,
+        "InformMap": InformMap
     };
 })();
 
-},{"./NewPlayer.js":11}],11:[function(require,module,exports){
+},{"./InformId.js":9,"./InformMap.js":10,"./UpdatePlayer.js":13}],13:[function(require,module,exports){
 module.exports = (function (){
     return function() {
-        var NewPlayer = {};
+        var UpdatePlayer = {};
 
-        NewPlayer.x = 0;
-        NewPlayer.y = 0;
-        NewPlayer.id = 0;
-        NewPlayer.color = "#000";
+        UpdatePlayer.x = 0;
+        UpdatePlayer.y = 0;
+        UpdatePlayer.width = 0;
+        UpdatePlayer.height = 0;
+        UpdatePlayer.id = 0;
+        UpdatePlayer.color = "#000";
 
-        return NewPlayer;
+        return UpdatePlayer;
     };
 })();
 
-},{}],12:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 /*!
  * jQuery JavaScript Library v2.1.4
  * http://jquery.com/
@@ -9639,4 +9683,4 @@ return jQuery;
 
 }));
 
-},{}]},{},[1,2,3,4,5,6,7,8,9,10,11]);
+},{}]},{},[1,2,3,4,5,9,10,11,12,13,6,7,8]);

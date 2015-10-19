@@ -11,6 +11,7 @@ module.exports = (function (){
             height: 100,
             mass: 50,
             topSpeed: 150,
+            stoppedSpeed: 5.0,
             movementForce: 1000,
         },
         gravity: Vector(0, 9.8),

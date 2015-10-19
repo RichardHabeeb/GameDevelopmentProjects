@@ -1,8 +1,8 @@
 module.exports = (function (){
     window.jQuery = $ = require('jquery');
-    var Settings = require("./Settings.js");
+    var Settings = require("../../common/Settings.js");
     var Entity = require("./Entity.js");
-    var Vector = require("./Vector.js");
+    var Vector = require("../../common/Vector.js");
     var Keyboard = require("./Keyboard.js");
     var keyCodes = {
         up: 38,
@@ -23,32 +23,48 @@ module.exports = (function (){
         });
 
         this.keys = new Keyboard();
-        this.player = null;
-        this.entities = [];
+        this.keys.startListener();
+        this.player = { id: null }; /* this is so we can pass a reference */
+        this.entities = {};
     };
 
     Game.prototype.setServer = function(server) {
         var svgWindow = this.svgWindow;
+        var entities = this.entities;
+        var player = this.player;
 
-        server.addMessageHandler("NewPlayer", function (message) {
-            console.log("Recieved New Player.");
-            var newPlayer = new Entity(message.id);
-            newPlayer.setPosition(new Vector(message.x, message.y));
-            newPlayer.setColor(message.color);
-            newPlayer.attachTo(svgWindow); //TODO layers
+        server.addMessageHandler("UpdatePlayer", function (message) {
+            if(message.id in entities) {
+                entities[message.id].setPosition(new Vector(message.x, message.y));
+            } else {
+                console.log("Recieved New Player.");
+                var newPlayer = new Entity(message.id);
+                newPlayer.setPosition(new Vector(message.x, message.y));
+                newPlayer.setColor(message.color);
+                newPlayer.attachTo(svgWindow); //TODO layers
+                entities[message.id] = newPlayer;
+            }
+        });
+
+        server.addMessageHandler("InformId", function (message) {
+            player.id = message.id;
+
         });
     };
 
 
-    Game.prototype.update = function() {
-        if(this.player !== null) {
-            this.player.appliedForce.x = 0;
-            if(this.keys.keyPressed[keyCodes.left]) this.player.appliedForce.x -= Settings.player.movementForce;
-            if(this.keyPressed[keyCodes.right]) this.player.appliedForce.x += Settings.player.movementForce;
+    Game.prototype.update = function(elapsedTimeSeconds) {
+        if(this.player.id !== null && typeof this.entities[this.player.id] !== "undefined") {
+            var player = this.entities[this.player.id];
+            player.appliedForce.x = 0;
+            if(this.keys.keyPressed[keyCodes.left]) player.appliedForce.x -= Settings.player.movementForce;
+            if(this.keys.keyPressed[keyCodes.right]) player.appliedForce.x += Settings.player.movementForce;
         }
 
-        for(var i = 0; i < this.entities.lenth; i++) {
-            this.entities[i].update();
+        for (var id in this.entities) {
+            if (this.entities.hasOwnProperty(id)) {
+                this.entities[id].update(elapsedTimeSeconds);
+            }
         }
     };
 

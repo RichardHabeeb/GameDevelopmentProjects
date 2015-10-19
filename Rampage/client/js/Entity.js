@@ -1,7 +1,7 @@
 module.exports = (function (){
-    var Rect = require("./Rect.js");
-    var Vector = require("./Vector.js");
-    var Settings = require("./Settings.js");
+    var Rect = require("../../common/Rect.js");
+    var Vector = require("../../common/Vector.js");
+    var Settings = require("../../common/Settings.js");
 
     var Entity = function(id) {
         this.velocity = new Vector();
@@ -46,9 +46,9 @@ module.exports = (function (){
         if(this.velocity.x < 0) acceleration.x += frictionForceMag * this.mass;
         this.velocity.x = Math.max(-Settings.player.topSpeed, Math.min(Settings.player.topSpeed, this.velocity.x + acceleration.x * elapsedTimeSeconds));
         this.velocity.y = this.velocity.y + acceleration.y * elapsedTimeSeconds;
-        if(Math.abs(velocity.x) < stoppedSpeed) velocity.x = 0;
+        if(Math.abs(this.velocity.x) < Settings.player.stoppedSpeed) this.velocity.x = 0;
         var position = this.getPosition();
-        this.setPosition(position.x + velocity.x * elapsedTimeSeconds, position.y + velocity.y * elapsedTimeSeconds);
+        this.setPosition(Vector(position.x + this.velocity.x * elapsedTimeSeconds, position.y + this.velocity.y * elapsedTimeSeconds));
     };
 
     return Entity;

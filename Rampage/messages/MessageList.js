@@ -1,7 +1,11 @@
 module.exports = (function (){
-    var NewPlayer = require("./NewPlayer.js");
+    var UpdatePlayer = require("./UpdatePlayer.js");
+    var InformId = require("./InformId.js");
+    var InformMap = require("./InformMap.js");
 
     return {
-        "NewPlayer": NewPlayer
+        "UpdatePlayer": UpdatePlayer,
+        "InformId": InformId,
+        "InformMap": InformMap
     };
 })();

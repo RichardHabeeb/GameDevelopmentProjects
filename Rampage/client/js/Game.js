@@ -4,6 +4,8 @@ module.exports = (function (){
     var Entity = require("./Entity.js");
     var Vector = require("../../common/Vector.js");
     var Keyboard = require("./Keyboard.js");
+    var Message = require("../../messages/Message.js");
+
     var keyCodes = {
         up: 38,
         down: 40,
@@ -39,6 +41,7 @@ module.exports = (function (){
         var backgroundGroup = this.backgroundGroup;
         var entities = this.entities;
         var player = this.player;
+        this.server = server;
 
         server.addMessageHandler("UpdatePlayer", function (message) {
             if(message.id in entities) {
@@ -53,9 +56,15 @@ module.exports = (function (){
             }
         });
 
+        server.addMessageHandler("RemovePlayer", function (message) {
+            if(player.id !== message.id) {
+                entities[message.id].hide();
+                delete entities[message.id];
+            }
+        });
+
         server.addMessageHandler("InformId", function (message) {
             player.id = message.id;
-
         });
 
         server.addMessageHandler("InformMap", function(message) {
@@ -98,12 +107,26 @@ module.exports = (function (){
 
                     if(hitbox.y + hitbox.height > this.viewBoxOffset.y + Settings.window.height - Settings.window.scroll.y) {
                         offset.y = hitbox.y + hitbox.height - (Settings.window.height - Settings.window.scroll.y);
-                    }
+                    } //TODO clean up and put in a function
 
                     this.moveViewport(offset);
-
+                    this.updateServer(this.entities[id]);
                 }
             }
+        }
+    };
+
+    Game.prototype.updateServer = function(player) { //TODO slim down this packet
+        if(typeof this.server !== "undefined") {
+            var message = Message("UpdatePlayer");
+            var hitbox = player.getHitbox();
+            message.data.id = player.id;
+            message.data.x = hitbox.x;
+            message.data.y = hitbox.y;
+            message.data.width = hitbox.width;
+            message.data.height = hitbox.height;
+            message.data.color = player.getColor();
+            this.server.send(message);
         }
     };
 

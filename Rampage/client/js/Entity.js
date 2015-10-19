@@ -14,6 +14,7 @@ module.exports = (function (){
             width: Settings.player.width,
             height: Settings.player.height
         });
+        this.id = id;
 
     };
 
@@ -25,7 +26,7 @@ module.exports = (function (){
     };
 
     Entity.prototype.getPosition = function() {
-        return new Vector(Number(this.svg.attr("x")), Number(this.svg.attr("y")));
+        return new Vector(Number(this.svg.attr("x")), Number(this.svg.attr("y"))); //TODO cache these locally?
     };
 
     Entity.prototype.getHitbox = function() {
@@ -41,8 +42,16 @@ module.exports = (function (){
         parent.append(this.svg);
     };
 
+    Entity.prototype.hide = function() {
+        this.svg.remove();
+    };
+
     Entity.prototype.setColor = function (color) {
         this.svg.attr("fill", color);
+    };
+
+    Entity.prototype.getColor = function() {
+        return this.svg.attr("fill");
     };
 
     Entity.prototype.update = function(elapsedTimeSeconds) {

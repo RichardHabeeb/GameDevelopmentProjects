@@ -23,5 +23,13 @@ module.exports = (function (){
         return m;
     };
 
+    Player.prototype.recieveUpdate = function(m) {
+        this.hitbox.x = m.data.x;
+        this.hitbox.y = m.data.y;
+        this.hitbox.width = m.data.width;
+        this.hitbox.height = m.data.height;
+        this.color = m.data.color;
+    };
+
     return Player;
 })();

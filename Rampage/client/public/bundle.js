@@ -15,6 +15,7 @@ module.exports = (function (){
             width: Settings.player.width,
             height: Settings.player.height
         });
+        this.id = id;
 
     };
 
@@ -26,7 +27,7 @@ module.exports = (function (){
     };
 
     Entity.prototype.getPosition = function() {
-        return new Vector(Number(this.svg.attr("x")), Number(this.svg.attr("y")));
+        return new Vector(Number(this.svg.attr("x")), Number(this.svg.attr("y"))); //TODO cache these locally?
     };
 
     Entity.prototype.getHitbox = function() {
@@ -42,8 +43,16 @@ module.exports = (function (){
         parent.append(this.svg);
     };
 
+    Entity.prototype.hide = function() {
+        this.svg.remove();
+    };
+
     Entity.prototype.setColor = function (color) {
         this.svg.attr("fill", color);
+    };
+
+    Entity.prototype.getColor = function() {
+        return this.svg.attr("fill");
     };
 
     Entity.prototype.update = function(elapsedTimeSeconds) {
@@ -71,6 +80,8 @@ module.exports = (function (){
     var Entity = require("./Entity.js");
     var Vector = require("../../common/Vector.js");
     var Keyboard = require("./Keyboard.js");
+    var Message = require("../../messages/Message.js");
+
     var keyCodes = {
         up: 38,
         down: 40,
@@ -106,6 +117,7 @@ module.exports = (function (){
         var backgroundGroup = this.backgroundGroup;
         var entities = this.entities;
         var player = this.player;
+        this.server = server;
 
         server.addMessageHandler("UpdatePlayer", function (message) {
             if(message.id in entities) {
@@ -120,9 +132,15 @@ module.exports = (function (){
             }
         });
 
+        server.addMessageHandler("RemovePlayer", function (message) {
+            if(player.id !== message.id) {
+                entities[message.id].hide();
+                delete entities[message.id];
+            }
+        });
+
         server.addMessageHandler("InformId", function (message) {
             player.id = message.id;
-
         });
 
         server.addMessageHandler("InformMap", function(message) {
@@ -165,12 +183,26 @@ module.exports = (function (){
 
                     if(hitbox.y + hitbox.height > this.viewBoxOffset.y + Settings.window.height - Settings.window.scroll.y) {
                         offset.y = hitbox.y + hitbox.height - (Settings.window.height - Settings.window.scroll.y);
-                    }
+                    } //TODO clean up and put in a function
 
                     this.moveViewport(offset);
-
+                    this.updateServer(this.entities[id]);
                 }
             }
+        }
+    };
+
+    Game.prototype.updateServer = function(player) { //TODO slim down this packet
+        if(typeof this.server !== "undefined") {
+            var message = Message("UpdatePlayer");
+            var hitbox = player.getHitbox();
+            message.data.id = player.id;
+            message.data.x = hitbox.x;
+            message.data.y = hitbox.y;
+            message.data.width = hitbox.width;
+            message.data.height = hitbox.height;
+            message.data.color = player.getColor();
+            this.server.send(message);
         }
     };
 
@@ -220,7 +252,7 @@ module.exports = (function (){
     return Game;
 })();
 
-},{"../../common/Settings.js":7,"../../common/Vector.js":8,"./Entity.js":1,"./Keyboard.js":3,"jquery":14}],3:[function(require,module,exports){
+},{"../../common/Settings.js":7,"../../common/Vector.js":8,"../../messages/Message.js":11,"./Entity.js":1,"./Keyboard.js":3,"jquery":15}],3:[function(require,module,exports){
 module.exports = (function (){ //TODO make this a singleton
     return function() {
         var that = {};
@@ -310,7 +342,7 @@ window.onload = function() {
 
 };
 
-},{"../../common/Settings.js":7,"../../messages/Message.js":11,"./Game.js":2,"./Server.js":5,"jquery":14}],5:[function(require,module,exports){
+},{"../../common/Settings.js":7,"../../messages/Message.js":11,"./Game.js":2,"./Server.js":5,"jquery":15}],5:[function(require,module,exports){
 module.exports = (function (){
     window.jQuery = $ = require('jquery');
 
@@ -371,7 +403,7 @@ module.exports = (function (){
     return Server;
 })();
 
-},{"jquery":14}],6:[function(require,module,exports){
+},{"jquery":15}],6:[function(require,module,exports){
 module.exports = (function (){
     var Vector = require("./Vector.js");
     return function (setX, setY, setWidth, setHeight) {
@@ -539,15 +571,28 @@ module.exports = (function (){
     var UpdatePlayer = require("./UpdatePlayer.js");
     var InformId = require("./InformId.js");
     var InformMap = require("./InformMap.js");
+    var RemovePlayer = require("./RemovePlayer.js");
 
     return {
         "UpdatePlayer": UpdatePlayer,
         "InformId": InformId,
-        "InformMap": InformMap
+        "InformMap": InformMap,
+        "RemovePlayer": RemovePlayer,
     };
 })();
 
-},{"./InformId.js":9,"./InformMap.js":10,"./UpdatePlayer.js":13}],13:[function(require,module,exports){
+},{"./InformId.js":9,"./InformMap.js":10,"./RemovePlayer.js":13,"./UpdatePlayer.js":14}],13:[function(require,module,exports){
+module.exports = (function (){
+    return function() {
+        var RemovePlayer = {};
+
+        RemovePlayer.id = 0;
+
+        return RemovePlayer;
+    };
+})();
+
+},{}],14:[function(require,module,exports){
 module.exports = (function (){
     return function() {
         var UpdatePlayer = {};
@@ -563,7 +608,7 @@ module.exports = (function (){
     };
 })();
 
-},{}],14:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 /*!
  * jQuery JavaScript Library v2.1.4
  * http://jquery.com/
@@ -9775,4 +9820,4 @@ return jQuery;
 
 }));
 
-},{}]},{},[1,2,3,4,5,9,10,11,12,13,6,7,8]);
+},{}]},{},[1,2,3,4,5,9,10,11,12,13,14,6,7,8]);

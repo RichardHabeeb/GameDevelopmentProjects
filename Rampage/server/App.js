@@ -7,6 +7,7 @@ var app             = express();
 var server          = app.listen(80);
 var wsServer        = new WebSocketServer({ httpServer : server });
 var clients         = [];
+var totalClients    = 0;
 
 
 var bg = "<g></g>";
@@ -28,9 +29,31 @@ var notifyClients = function(message, list) {
     }
 };
 
+var sendSingleClientUpdates = function(client, list) {
+    if(typeof list === "undefined") list = clients;
+
+    for(var i = 0; i < list.length; i++) {
+        client.send(list[i].player.getUpdate());
+    }
+};
+
+var loop = function() {
+    /* precompute updates */
+    var updates = [];
+    for(var i = 0; i < clients.length; i++) {
+        updates[i] = clients[i].player.getUpdate();
+    }
+
+    for(i = 0; i < clients.length; i++) {
+        notifyClients(updates[i], clients.slice(0,i).concat(clients.slice(i + 1, clients.length))); //TODO precompute
+    }
+};
+setInterval(loop, 16);
+
 wsServer.on('request', function(request) {
     var newClient = new Client(request.accept('echo-protocol', request.origin));
-    newClient.setId(clients.length);
+    newClient.setId(totalClients++);
+    sendSingleClientUpdates(newClient, clients);
     clients.push(newClient);
     console.log((new Date()) + ' Connection accepted.');
 
@@ -43,9 +66,24 @@ wsServer.on('request', function(request) {
 
     newClient.connection.on('message', function(message) {
         if (message.type === 'utf8') {
-            console.log('Received Message: ' + message.utf8Data);
-            newClient.send(JSON.parse(message.utf8Data));
+            try {
+                message = JSON.parse(message.utf8Data);
+            } catch (e) {
+                return;
+            }
+            if(message.id === "UpdatePlayer" && newClient.id == message.data.id) {
+                newClient.player.recieveUpdate(message);
+            }
         }
     });
+
+    newClient.connection.on('close', function(reasonCode, description) {
+        console.log((new Date()) + ' Peer disconnected.');
+        clients.splice(clients.indexOf(newClient), 1); //TODO defensive code
+        var m = Message("RemovePlayer");
+        m.data.id = newClient.id;
+        notifyClients(m);
+    });
+
 
 });

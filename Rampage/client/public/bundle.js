@@ -145,6 +145,7 @@ module.exports = (function (){
         for (var id in this.entities) {
             if (this.entities.hasOwnProperty(id)) {
                 this.entities[id].update(elapsedTimeSeconds);
+                this.handleLocalCollisions(this.entities[id]);
 
                 if(Number(id) === this.player.id) {
                     var hitbox = this.entities[id].getHitbox();
@@ -167,6 +168,7 @@ module.exports = (function (){
                     }
 
                     this.moveViewport(offset);
+
                 }
             }
         }
@@ -188,6 +190,26 @@ module.exports = (function (){
     Game.prototype.handleLocalCollisions = function(entity) {
         //TODO improve/move
         var box = entity.getHitbox();
+
+        if(box.x < 0) {
+            entity.setPosition(Vector(0, box.y));
+            box.x = 0;
+        }
+
+        if(box.x + box.width > Settings.world.width) {
+            entity.setPosition(Vector(Settings.world.width - box.width, box.y));
+            box.x = Settings.world.width - box.width;
+        }
+
+        if(box.y < 0) {
+            entity.setPosition(Vector(box.x, 0));
+            box.y = 0;
+        }
+
+        if(box.y + box.height > Settings.world.height) {
+            entity.setPosition(Vector(box.x, Settings.world.height - box.height));
+            entity.onFloor = true;
+        }
 
     };
 
@@ -439,8 +461,8 @@ module.exports = (function (){
             scroll: Vector(100, 100)
         },
         world: {
-            width: 2000,
-            height: 1000
+            width: 1300,
+            height: 550
         },
         player: {
             width: 25,

@@ -8,8 +8,8 @@ module.exports = (function (){
             scroll: Vector(100, 100)
         },
         world: {
-            width: 2000,
-            height: 1000
+            width: 1300,
+            height: 550
         },
         player: {
             width: 25,

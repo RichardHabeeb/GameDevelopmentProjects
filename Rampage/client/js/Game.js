@@ -16,20 +16,27 @@ module.exports = (function (){
 
     var Game = function(parentElement) {
         this.svgWindow = $(document.createElementNS(Settings.svgUri, "svg"));
-        parentElement.append(this.svgWindow);
         this.svgWindow.attr({
             width: Settings.window.width,
             height: Settings.window.height
         });
+        this.backgroundGroup = $(document.createElementNS(Settings.svgUri, "g"));
+        this.playerGroup = $(document.createElementNS(Settings.svgUri, "g"));
+        parentElement.append(this.svgWindow);
+        this.svgWindow.append(this.backgroundGroup);
+        this.svgWindow.append(this.playerGroup);
+
 
         this.keys = new Keyboard();
         this.keys.startListener();
         this.player = { id: null }; /* this is so we can pass a reference */
         this.entities = {};
+        this.viewBoxOffset = Vector();
     };
 
     Game.prototype.setServer = function(server) {
-        var svgWindow = this.svgWindow;
+        var playerGroup = this.playerGroup;
+        var backgroundGroup = this.backgroundGroup;
         var entities = this.entities;
         var player = this.player;
 
@@ -41,7 +48,7 @@ module.exports = (function (){
                 var newPlayer = new Entity(message.id);
                 newPlayer.setPosition(new Vector(message.x, message.y));
                 newPlayer.setColor(message.color);
-                newPlayer.attachTo(svgWindow); //TODO layers
+                newPlayer.attachTo(playerGroup); //TODO layers
                 entities[message.id] = newPlayer;
             }
         });
@@ -49,6 +56,13 @@ module.exports = (function (){
         server.addMessageHandler("InformId", function (message) {
             player.id = message.id;
 
+        });
+
+        server.addMessageHandler("InformMap", function(message) {
+            var parser = new DOMParser();
+            doc = parser.parseFromString(message.background, "image/svg+xml");
+            doc.namespaceURI = Settings.svgUri;
+            backgroundGroup.append(doc.children);
         });
     };
 
@@ -64,8 +78,50 @@ module.exports = (function (){
         for (var id in this.entities) {
             if (this.entities.hasOwnProperty(id)) {
                 this.entities[id].update(elapsedTimeSeconds);
+
+                if(Number(id) === this.player.id) {
+                    var hitbox = this.entities[id].getHitbox();
+                    var offset = Vector(this.viewBoxOffset.x, this.viewBoxOffset.y);
+
+                    if(hitbox.x < this.viewBoxOffset.x + Settings.window.scroll.x) {
+                        offset.x = hitbox.x - Settings.window.scroll.x;
+                    }
+
+                    if(hitbox.y < this.viewBoxOffset.y + Settings.window.scroll.y) {
+                        offset.y = hitbox.y - Settings.window.scroll.y;
+                    }
+
+                    if(hitbox.x + hitbox.width > this.viewBoxOffset.x + Settings.window.width - Settings.window.scroll.x) {
+                        offset.x = hitbox.x + hitbox.width - (Settings.window.width - Settings.window.scroll.x);
+                    }
+
+                    if(hitbox.y + hitbox.height > this.viewBoxOffset.y + Settings.window.height - Settings.window.scroll.y) {
+                        offset.y = hitbox.y + hitbox.height - (Settings.window.height - Settings.window.scroll.y);
+                    }
+
+                    this.moveViewport(offset);
+                }
             }
         }
+    };
+
+    Game.prototype.moveViewport = function(offset) {
+        /* this is a hack to fix an issue with js and viewbox */
+        this.viewBoxOffset.x = offset.x;
+        this.viewBoxOffset.y = offset.y;
+        this.playerGroup.attr({
+            transform: "translate(" + -offset.x + "," + -offset.y + ")"
+        });
+        this.backgroundGroup.attr({
+            transform: "translate(" + -offset.x + "," + -offset.y + ")"
+        });
+
+    };
+
+    Game.prototype.handleLocalCollisions = function(entity) {
+        //TODO improve/move
+        var box = entity.getHitbox();
+
     };
 
     Game.prototype.render = function() {

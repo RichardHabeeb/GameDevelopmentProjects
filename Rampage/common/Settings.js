@@ -4,18 +4,23 @@ module.exports = (function (){
     return {
         window: {
             width: 1000,
-            height: 700,
+            height: 500,
+            scroll: Vector(100, 100)
+        },
+        world: {
+            width: 2000,
+            height: 1000
         },
         player: {
-            width: 50,
-            height: 100,
+            width: 25,
+            height: 50,
             mass: 50,
-            topSpeed: 150,
+            topSpeed: 300,
             stoppedSpeed: 5.0,
-            movementForce: 1000,
+            movementForce: 2000,
         },
         gravity: Vector(0, 9.8),
-        frictionCoef: 0.99,
+        frictionCoef: 1.0,
         serverUri: "ws://localhost/",
         svgUri: "http://www.w3.org/2000/svg"
     };

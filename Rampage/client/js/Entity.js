@@ -7,7 +7,7 @@ module.exports = (function (){
         this.velocity = new Vector();
         this.appliedForce = new Vector();
         this.mass = Settings.player.mass;
-        this.onFloor = true;
+        this.onFloor = false;
         this.svg = $(document.createElementNS(Settings.svgUri, "rect"));
         this.svg.attr({
             id: id,
@@ -26,6 +26,15 @@ module.exports = (function (){
 
     Entity.prototype.getPosition = function() {
         return new Vector(Number(this.svg.attr("x")), Number(this.svg.attr("y")));
+    };
+
+    Entity.prototype.getHitbox = function() {
+        return new Rect(
+            Number(this.svg.attr("x")),
+            Number(this.svg.attr("y")),
+            Number(this.svg.attr("width")),
+            Number(this.svg.attr("height"))
+        );
     };
 
     Entity.prototype.attachTo = function (parent) {

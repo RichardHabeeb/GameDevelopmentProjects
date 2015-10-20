@@ -53,7 +53,7 @@ module.exports = (function (){
     };
 
     CollisionDetector.prototype.removeClient = function(client) {
-        this.clients.splice(this.clients.indexOf(newClient), 1); //TODO defensive code
+        this.clients.splice(this.clients.indexOf(client), 1); //TODO defensive code
         if(client.player.prev !== null) {
             client.player.prev.next = client.player.next;
             client.player.prev = null;

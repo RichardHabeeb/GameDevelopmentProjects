@@ -1,5 +1,38 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 module.exports = (function (){
+    var Settings = require("../../common/Settings.js");
+    var Vector = require("../../common/Vector.js");
+
+    var Cursor = function(parent, callback) {
+        var pos = new Vector();
+        var svg = $(document.createElementNS(Settings.svgUri, "circle"));
+        svg.attr({
+            "fill": "red",
+            "r": 25,
+            "fill-opacity":"0.4"
+        });
+        parent.append(svg);
+
+        $(document).on('mousemove', function(e){
+            var parentOffset = parent.offset();
+            pos.x = e.pageX - parentOffset.left;
+            pos.y = e.pageY- parentOffset.top;
+            svg.attr({
+               "cx": pos.x,
+               "cy": pos.y
+            });
+        });
+
+        svg.click(function() {
+            callback(pos);
+        });
+    };
+
+    return Cursor;
+})();
+
+},{"../../common/Settings.js":8,"../../common/Vector.js":9}],2:[function(require,module,exports){
+module.exports = (function (){
     var Rect = require("../../common/Rect.js");
     var Vector = require("../../common/Vector.js");
     var Settings = require("../../common/Settings.js");
@@ -73,7 +106,7 @@ module.exports = (function (){
     return Entity;
 })();
 
-},{"../../common/Rect.js":6,"../../common/Settings.js":7,"../../common/Vector.js":8}],2:[function(require,module,exports){
+},{"../../common/Rect.js":7,"../../common/Settings.js":8,"../../common/Vector.js":9}],3:[function(require,module,exports){
 module.exports = (function (){
     window.jQuery = $ = require('jquery');
     var Settings = require("../../common/Settings.js");
@@ -81,6 +114,7 @@ module.exports = (function (){
     var Vector = require("../../common/Vector.js");
     var Keyboard = require("./Keyboard.js");
     var Message = require("../../messages/Message.js");
+    var Cursor = require("./Cursor.js");
 
     var keyCodes = {
         up: 38,
@@ -100,10 +134,27 @@ module.exports = (function (){
         });
         this.backgroundGroup = $(document.createElementNS(Settings.svgUri, "g"));
         this.playerGroup = $(document.createElementNS(Settings.svgUri, "g"));
+        this.svgDefs = $(document.createElementNS(Settings.svgUri, "defs"));
+
+        this.svgMask = $(document.createElementNS(Settings.svgUri, "mask"));
+        this.svgMask.attr({"id": "destructionMask",
+            maskContentUnits:"objectBoundingBox",
+        });
+        var maskbg = $(document.createElementNS(Settings.svgUri, "rect"));
+        maskbg.attr({
+            "x": 0,
+            "y": 0,
+            "width": Settings.window.width,
+            "height": Settings.window.height,
+            "fill": "#FFF"
+        });
+        this.svgMask.append(maskbg);
+        this.svgDefs.append(this.svgMask);
+        this.svgWindow.append(this.svgDefs);
+        this.backgroundGroup.attr("mask", "url(#" + this.svgMask.attr("id") + ")");
         parentElement.append(this.svgWindow);
         this.svgWindow.append(this.backgroundGroup);
         this.svgWindow.append(this.playerGroup);
-
 
         this.keys = new Keyboard();
         this.keys.startListener();
@@ -117,7 +168,19 @@ module.exports = (function (){
         var backgroundGroup = this.backgroundGroup;
         var entities = this.entities;
         var player = this.player;
+        var svgMask = this.svgMask;
         this.server = server;
+        var viewBoxOffset = this.viewBoxOffset;
+
+        var cursor = new Cursor(this.svgWindow, function(clickPosition) {
+            if(server !== null) {
+                var destroyMessage = Message("Attack");
+                destroyMessage.data.position.x = clickPosition.x + viewBoxOffset.x;
+                destroyMessage.data.position.y = clickPosition.y + viewBoxOffset.y;
+                destroyMessage.data.id = player.id;
+                server.send(destroyMessage);
+            }
+        });
 
         server.addMessageHandler("UpdatePlayer", function (message) {
             if(message.id in entities) {
@@ -148,6 +211,17 @@ module.exports = (function (){
             doc = parser.parseFromString(message.background, "image/svg+xml");
             doc.namespaceURI = Settings.svgUri;
             backgroundGroup.append(doc.children);
+        });
+
+        server.addMessageHandler("Attack", function(message) {
+            var damage = $(document.createElementNS(Settings.svgUri, "circle"));
+            damage.attr({
+                "cx": message.position.x,
+                "cy": message.position.y,
+                "fill": "black",
+                "r": 25,
+            });
+            svgMask.append(damage);
         });
     };
 
@@ -216,7 +290,6 @@ module.exports = (function (){
         this.backgroundGroup.attr({
             transform: "translate(" + -offset.x + "," + -offset.y + ")"
         });
-
     };
 
     Game.prototype.handleLocalCollisions = function(entity) {
@@ -252,7 +325,7 @@ module.exports = (function (){
     return Game;
 })();
 
-},{"../../common/Settings.js":7,"../../common/Vector.js":8,"../../messages/Message.js":11,"./Entity.js":1,"./Keyboard.js":3,"jquery":15}],3:[function(require,module,exports){
+},{"../../common/Settings.js":8,"../../common/Vector.js":9,"../../messages/Message.js":13,"./Cursor.js":1,"./Entity.js":2,"./Keyboard.js":4,"jquery":17}],4:[function(require,module,exports){
 module.exports = (function (){ //TODO make this a singleton
     return function() {
         var that = {};
@@ -313,7 +386,7 @@ module.exports = (function (){ //TODO make this a singleton
     };
 })();
 
-},{}],4:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 window.jQuery = $ = require('jquery');
 var Game = require("./Game.js");
 var Server = require("./Server.js");
@@ -342,7 +415,7 @@ window.onload = function() {
 
 };
 
-},{"../../common/Settings.js":7,"../../messages/Message.js":11,"./Game.js":2,"./Server.js":5,"jquery":15}],5:[function(require,module,exports){
+},{"../../common/Settings.js":8,"../../messages/Message.js":13,"./Game.js":3,"./Server.js":6,"jquery":17}],6:[function(require,module,exports){
 module.exports = (function (){
     window.jQuery = $ = require('jquery');
 
@@ -403,7 +476,7 @@ module.exports = (function (){
     return Server;
 })();
 
-},{"jquery":15}],6:[function(require,module,exports){
+},{"jquery":17}],7:[function(require,module,exports){
 module.exports = (function (){
     var Vector = require("./Vector.js");
     return function (setX, setY, setWidth, setHeight) {
@@ -482,7 +555,7 @@ module.exports = (function (){
     };
 })();
 
-},{"./Vector.js":8}],7:[function(require,module,exports){
+},{"./Vector.js":9}],8:[function(require,module,exports){
 module.exports = (function (){
     var Vector = require("./Vector.js");
 
@@ -511,7 +584,7 @@ module.exports = (function (){
     };
 })();
 
-},{"./Vector.js":8}],8:[function(require,module,exports){
+},{"./Vector.js":9}],9:[function(require,module,exports){
 module.exports = (function (){
     return function (setX, setY) {
         var that = {};
@@ -530,7 +603,19 @@ module.exports = (function (){
     };
 })();
 
-},{}],9:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
+module.exports = (function (){
+    return function() {
+        var Attack = {};
+        
+        Attack.id = 0;
+        Attack.position = {x: 0, y: 0};
+
+        return Attack;
+    };
+})();
+
+},{}],11:[function(require,module,exports){
 module.exports = (function (){
     return function() {
         var InformId = {};
@@ -541,7 +626,7 @@ module.exports = (function (){
     };
 })();
 
-},{}],10:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 module.exports = (function (){
     return function() {
         var InformMap = {};
@@ -553,7 +638,7 @@ module.exports = (function (){
     };
 })();
 
-},{}],11:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 module.exports = (function (){
     var MessageList = require("./MessageList.js");
     
@@ -566,22 +651,24 @@ module.exports = (function (){
     };
 })();
 
-},{"./MessageList.js":12}],12:[function(require,module,exports){
+},{"./MessageList.js":14}],14:[function(require,module,exports){
 module.exports = (function (){
     var UpdatePlayer = require("./UpdatePlayer.js");
     var InformId = require("./InformId.js");
     var InformMap = require("./InformMap.js");
     var RemovePlayer = require("./RemovePlayer.js");
+    var Attack = require("./Attack.js");
 
     return {
         "UpdatePlayer": UpdatePlayer,
         "InformId": InformId,
         "InformMap": InformMap,
         "RemovePlayer": RemovePlayer,
+        "Attack": Attack
     };
 })();
 
-},{"./InformId.js":9,"./InformMap.js":10,"./RemovePlayer.js":13,"./UpdatePlayer.js":14}],13:[function(require,module,exports){
+},{"./Attack.js":10,"./InformId.js":11,"./InformMap.js":12,"./RemovePlayer.js":15,"./UpdatePlayer.js":16}],15:[function(require,module,exports){
 module.exports = (function (){
     return function() {
         var RemovePlayer = {};
@@ -592,7 +679,7 @@ module.exports = (function (){
     };
 })();
 
-},{}],14:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 module.exports = (function (){
     return function() {
         var UpdatePlayer = {};
@@ -608,7 +695,7 @@ module.exports = (function (){
     };
 })();
 
-},{}],15:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 /*!
  * jQuery JavaScript Library v2.1.4
  * http://jquery.com/
@@ -9820,4 +9907,4 @@ return jQuery;
 
 }));
 
-},{}]},{},[1,2,3,4,5,9,10,11,12,13,14,6,7,8]);
+},{}]},{},[1,2,3,4,5,6,10,11,12,13,14,15,16,7,8,9]);

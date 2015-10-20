@@ -5,6 +5,7 @@ module.exports = (function (){
     var Vector = require("../../common/Vector.js");
     var Keyboard = require("./Keyboard.js");
     var Message = require("../../messages/Message.js");
+    var Cursor = require("./Cursor.js");
 
     var keyCodes = {
         up: 38,
@@ -24,10 +25,27 @@ module.exports = (function (){
         });
         this.backgroundGroup = $(document.createElementNS(Settings.svgUri, "g"));
         this.playerGroup = $(document.createElementNS(Settings.svgUri, "g"));
+        this.svgDefs = $(document.createElementNS(Settings.svgUri, "defs"));
+
+        this.svgMask = $(document.createElementNS(Settings.svgUri, "mask"));
+        this.svgMask.attr({"id": "destructionMask",
+            maskContentUnits:"objectBoundingBox",
+        });
+        var maskbg = $(document.createElementNS(Settings.svgUri, "rect"));
+        maskbg.attr({
+            "x": 0,
+            "y": 0,
+            "width": Settings.window.width,
+            "height": Settings.window.height,
+            "fill": "#FFF"
+        });
+        this.svgMask.append(maskbg);
+        this.svgDefs.append(this.svgMask);
+        this.svgWindow.append(this.svgDefs);
+        this.backgroundGroup.attr("mask", "url(#" + this.svgMask.attr("id") + ")");
         parentElement.append(this.svgWindow);
         this.svgWindow.append(this.backgroundGroup);
         this.svgWindow.append(this.playerGroup);
-
 
         this.keys = new Keyboard();
         this.keys.startListener();
@@ -41,7 +59,19 @@ module.exports = (function (){
         var backgroundGroup = this.backgroundGroup;
         var entities = this.entities;
         var player = this.player;
+        var svgMask = this.svgMask;
         this.server = server;
+        var viewBoxOffset = this.viewBoxOffset;
+
+        var cursor = new Cursor(this.svgWindow, function(clickPosition) {
+            if(server !== null) {
+                var destroyMessage = Message("Attack");
+                destroyMessage.data.position.x = clickPosition.x + viewBoxOffset.x;
+                destroyMessage.data.position.y = clickPosition.y + viewBoxOffset.y;
+                destroyMessage.data.id = player.id;
+                server.send(destroyMessage);
+            }
+        });
 
         server.addMessageHandler("UpdatePlayer", function (message) {
             if(message.id in entities) {
@@ -72,6 +102,17 @@ module.exports = (function (){
             doc = parser.parseFromString(message.background, "image/svg+xml");
             doc.namespaceURI = Settings.svgUri;
             backgroundGroup.append(doc.children);
+        });
+
+        server.addMessageHandler("Attack", function(message) {
+            var damage = $(document.createElementNS(Settings.svgUri, "circle"));
+            damage.attr({
+                "cx": message.position.x,
+                "cy": message.position.y,
+                "fill": "black",
+                "r": 25,
+            });
+            svgMask.append(damage);
         });
     };
 
@@ -140,7 +181,6 @@ module.exports = (function (){
         this.backgroundGroup.attr({
             transform: "translate(" + -offset.x + "," + -offset.y + ")"
         });
-
     };
 
     Game.prototype.handleLocalCollisions = function(entity) {

@@ -1,14 +1,17 @@
 var WebSocketServer = require('websocket').server;
 var express         = require('express');
 var Client          = require('./Client.js');
+var Vector          = require('../common/Vector.js');
 var Message         = require("../messages/Message.js");
+var CollisionDetector = require("./CollisionDetector.js");
 var fs              = require('fs');
 var app             = express();
 var server          = app.listen(80);
 var wsServer        = new WebSocketServer({ httpServer : server });
 var clients         = [];
+var attacks         = [];
 var totalClients    = 0;
-
+var detector        = new CollisionDetector(clients);
 
 var bg = "<g></g>";
 fs.readFile('server/background.svg', 'utf8', function (err, data) {
@@ -38,6 +41,8 @@ var sendSingleClientUpdates = function(client, list) {
 };
 
 var loop = function() {
+    detector.sort();
+
     /* precompute updates */
     var updates = [];
     for(var i = 0; i < clients.length; i++) {
@@ -53,12 +58,20 @@ setInterval(loop, 16);
 wsServer.on('request', function(request) {
     var newClient = new Client(request.accept('echo-protocol', request.origin));
     newClient.setId(totalClients++);
+
+    /* inform new client of existing clients (TODO maybe unecesarry now)*/
     sendSingleClientUpdates(newClient, clients);
-    clients.push(newClient);
+
+    detector.addClient(newClient);
     console.log((new Date()) + ' Connection accepted.');
 
+    /* notify clients of new player (TODO maybe unecesarry now)*/
     notifyClients(newClient.player.getUpdate());
-    console.log('Notified clients.');
+
+    /* replay attacks onto svg */
+    for(var i = 0; i < attacks.length; i++) {
+        newClient.send(attacks[i]);
+    }
 
     var mapMessage = Message("InformMap");
     mapMessage.data.background = bg;
@@ -69,17 +82,24 @@ wsServer.on('request', function(request) {
             try {
                 message = JSON.parse(message.utf8Data);
             } catch (e) {
+                console.log("Packet Dropped.");
                 return;
             }
+
             if(message.id === "UpdatePlayer" && newClient.id == message.data.id) {
                 newClient.player.recieveUpdate(message);
+            } else if(message.id === "Attack" && newClient.id == message.data.id) {
+                attacks.push(message);
+                notifyClients(message);
+            } else {
+                console.log("Unknown Packet ID:", message.id);
             }
         }
     });
 
     newClient.connection.on('close', function(reasonCode, description) {
         console.log((new Date()) + ' Peer disconnected.');
-        clients.splice(clients.indexOf(newClient), 1); //TODO defensive code
+        detector.removeClient(newClient);
         var m = Message("RemovePlayer");
         m.data.id = newClient.id;
         notifyClients(m);

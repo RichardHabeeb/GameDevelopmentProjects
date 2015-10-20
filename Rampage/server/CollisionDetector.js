@@ -9,6 +9,24 @@ module.exports = (function (){
         if(clients.length !== 0) this.front = clients[0].player;
     };
 
+    CollisionDetector.prototype.detectAttackRadius = function(center, radius) {
+        this.sort(); /* this should be nearly sorted */
+        var minx = center.x - radius;
+        var maxx = center.x + radius;
+
+        var collided = [];
+        var search = this.front;
+        while(search !== null) {
+            if(search.hitbox.x > maxx) break;
+            else if((search.hitbox.x + search.hitbox.width > minx) || (search.hitbox.x > minx && search.hitbox.x < maxx)) {
+                collided.push(search.client.id);
+            }
+            search = search.next;
+        }
+
+        return collided;
+    };
+
     CollisionDetector.prototype.sort = function() {
         if(this.front === null) return;
 

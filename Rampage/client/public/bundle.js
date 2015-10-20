@@ -8,7 +8,7 @@ module.exports = (function (){
         var svg = $(document.createElementNS(Settings.svgUri, "circle"));
         svg.attr({
             "fill": "red",
-            "r": 25,
+            "r": Settings.attackRadius,
             "fill-opacity":"0.4"
         });
         parent.append(svg);
@@ -219,7 +219,7 @@ module.exports = (function (){
                 "cx": message.position.x,
                 "cy": message.position.y,
                 "fill": "black",
-                "r": 25,
+                "r": Settings.attackRadius,
             });
             svgMask.append(damage);
         });
@@ -580,7 +580,8 @@ module.exports = (function (){
         gravity: Vector(0, 9.8),
         frictionCoef: 1.0,
         serverUri: "ws://localhost/",
-        svgUri: "http://www.w3.org/2000/svg"
+        svgUri: "http://www.w3.org/2000/svg",
+        attackRadius: 25
     };
 })();
 

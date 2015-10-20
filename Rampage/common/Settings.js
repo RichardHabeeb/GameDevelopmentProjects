@@ -22,6 +22,7 @@ module.exports = (function (){
         gravity: Vector(0, 9.8),
         frictionCoef: 1.0,
         serverUri: "ws://localhost/",
-        svgUri: "http://www.w3.org/2000/svg"
+        svgUri: "http://www.w3.org/2000/svg",
+        attackRadius: 25
     };
 })();

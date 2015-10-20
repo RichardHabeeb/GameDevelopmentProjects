@@ -7,7 +7,7 @@ module.exports = (function (){
         var svg = $(document.createElementNS(Settings.svgUri, "circle"));
         svg.attr({
             "fill": "red",
-            "r": 25,
+            "r": Settings.attackRadius,
             "fill-opacity":"0.4"
         });
         parent.append(svg);

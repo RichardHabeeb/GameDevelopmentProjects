@@ -2,6 +2,7 @@ var WebSocketServer = require('websocket').server;
 var express         = require('express');
 var Client          = require('./Client.js');
 var Vector          = require('../common/Vector.js');
+var Settings        = require('../common/Settings.js');
 var Message         = require("../messages/Message.js");
 var CollisionDetector = require("./CollisionDetector.js");
 var fs              = require('fs');
@@ -90,6 +91,7 @@ wsServer.on('request', function(request) {
                 newClient.player.recieveUpdate(message);
             } else if(message.id === "Attack" && newClient.id == message.data.id) {
                 attacks.push(message);
+                console.log("Detected attack x-collision with: ", detector.detectAttackRadius(message.data.position, Settings.attackRadius));
                 notifyClients(message);
             } else {
                 console.log("Unknown Packet ID:", message.id);

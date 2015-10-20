@@ -110,7 +110,7 @@ module.exports = (function (){
                 "cx": message.position.x,
                 "cy": message.position.y,
                 "fill": "black",
-                "r": 25,
+                "r": Settings.attackRadius,
             });
             svgMask.append(damage);
         });
